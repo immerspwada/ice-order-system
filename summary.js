@@ -22,6 +22,28 @@ function renderLiffCloseBtn() {
   }
 }
 
+// --- ตรวจสอบ sessionStorage ก่อนแสดง summary ---
+document.addEventListener('DOMContentLoaded', () => {
+  const customerInfo = JSON.parse(sessionStorage.getItem('customerInfo') || '{}');
+  const orderProducts = JSON.parse(sessionStorage.getItem('orderProducts') || '{}');
+  const lineUserId = sessionStorage.getItem('lineUserId') || '';
+  if (!customerInfo.name || !customerInfo.phone || !customerInfo.address || !lineUserId) {
+    let toast = document.querySelector('.toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.className = 'toast';
+      document.body.appendChild(toast);
+    }
+    toast.textContent = 'กรุณากรอกข้อมูลใหม่ หรือเข้าสู่ระบบอีกครั้ง';
+    toast.classList.add('show');
+    setTimeout(()=>{
+      toast.classList.remove('show');
+      window.location.href = 'index.html';
+    }, 1800);
+    return;
+  }
+});
+
 // โหลดข้อมูล order
 const summaryDiv = document.getElementById('orderSummary') || (() => {
   const d = document.createElement('div');
@@ -118,8 +140,61 @@ function renderSummary() {
         })
       });
     } catch(e) {}
-    window.location.href = 'receipt.html';
+    gotoReceipt();
   };
+}
+
+// --- ปุ่มดาวน์โหลด PDF, แชร์ LINE, แสดง QR พร้อมเพย์ ---
+function renderExtraActions(orderData) {
+  const actionsDiv = document.createElement('div');
+  actionsDiv.style.textAlign = 'center';
+  actionsDiv.style.margin = '2em 0 1em 0';
+  actionsDiv.innerHTML = `
+    <button id='downloadPdfBtn' class='btn-main' style='width:auto;margin:0 0.7em;'>ดาวน์โหลด PDF</button>
+    <button id='shareLineBtn' class='btn-main' style='width:auto;margin:0 0.7em;background:#00c300;color:#fff;'>แชร์ผ่าน LINE</button>
+    <div style='margin-top:1.2em;'>
+      <img src='https://promptpay.io/0888888888/100.png' alt='QR พร้อมเพย์' style='width:160px;border-radius:12px;box-shadow:0 2px 8px #ffe082;'>
+      <div style='font-size:0.98em;color:#888;margin-top:0.5em;'>สแกนเพื่อชำระเงิน</div>
+    </div>
+  `;
+  document.body.appendChild(actionsDiv);
+  document.getElementById('downloadPdfBtn').onclick = function() {
+    window.print();
+  };
+  document.getElementById('shareLineBtn').onclick = function() {
+    const msg = `สรุปออเดอร์ LUCKY Delivery\nชื่อ: ${orderData.name}\nยอดรวม: ฿${Object.values(orderData.products||{}).reduce((sum,p)=>sum+(p.price||0)*(p.qty||0),0)}`;
+    window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`);
+  };
+}
+
+// --- Loading/animation ขณะเปลี่ยนหน้า ---
+function showPageLoading() {
+  let loading = document.getElementById('pageLoading');
+  if (!loading) {
+    loading = document.createElement('div');
+    loading.id = 'pageLoading';
+    loading.style.position = 'fixed';
+    loading.style.left = '0';
+    loading.style.top = '0';
+    loading.style.width = '100vw';
+    loading.style.height = '100vh';
+    loading.style.background = 'rgba(255,255,255,0.7)';
+    loading.style.display = 'flex';
+    loading.style.alignItems = 'center';
+    loading.style.justifyContent = 'center';
+    loading.innerHTML = '<div style="border:6px solid #FFA726;border-top:6px solid #fff;border-radius:50%;width:54px;height:54px;animation:spin 1s linear infinite;"></div>';
+    document.body.appendChild(loading);
+  }
+  loading.style.display = 'flex';
+}
+function hidePageLoading() {
+  const loading = document.getElementById('pageLoading');
+  if (loading) loading.style.display = 'none';
+}
+// ใช้ loading ตอนเปลี่ยนหน้า
+function gotoReceipt() {
+  showPageLoading();
+  setTimeout(()=>{ window.location.href = 'receipt.html'; }, 600);
 }
 
 // ดึงชื่อจาก LINE LIFF profile แล้วแสดงชื่อผู้ใช้ที่ล็อกอินใน element ที่มี id="username"

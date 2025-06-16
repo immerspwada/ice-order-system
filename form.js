@@ -3,7 +3,6 @@
 
 // --- LIFF LINE Login & Profile ---
 const liffId = '2006986568-yjrOkKqm'; // liffId จริงจากผู้ใช้
-const lineLoginBtn = document.getElementById('lineLoginBtn');
 const lineProfileBox = document.getElementById('lineProfileBox');
 
 function showProfile(profile) {
@@ -26,13 +25,10 @@ function liffInitAndGetProfile() {
     } else {
       liff.getProfile().then(profile => {
         showProfile(profile);
-        lineLoginBtn.style.display = 'none';
       });
     }
   });
 }
-
-lineLoginBtn.onclick = liffInitAndGetProfile;
 
 // auto init if in LIFF
 if (window.liff && window.location.search.includes('liff.state')) {
@@ -52,14 +48,16 @@ function showToast(msg, ms=2200) {
   setTimeout(()=>toast.classList.remove('show'), ms);
 }
 
-// --- ตรวจสอบ session LINE ก่อนกรอกข้อมูล ---
+// --- ตรวจสอบ session LINE ก่อนกรอกข้อมูล (ปรับ UX ไม่ redirect ทันที) ---
 document.addEventListener('DOMContentLoaded', () => {
   const lineUserId = sessionStorage.getItem('lineUserId');
   if (!lineUserId) {
-    showToast('กรุณาเข้าสู่ระบบด้วย LINE ใหม่', 1500);
-    setTimeout(()=>window.location.href = 'index.html', 1500);
+    showToast('กรุณาเข้าสู่ระบบด้วย LINE ก่อนกรอกข้อมูล', 2500);
+    document.getElementById('lineProfileBox').style.display = 'none';
+    document.getElementById('customerForm').style.display = 'none';
     return;
   }
+  document.getElementById('customerForm').style.display = '';
   const form = document.getElementById('customerForm');
   form.addEventListener('submit', function(e) {
     e.preventDefault();
@@ -80,7 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const customerInfo = { name, phone, address, lineUserId };
     sessionStorage.setItem('customerInfo', JSON.stringify(customerInfo));
     showToast('บันทึกข้อมูลสำเร็จ', 1200);
-    setTimeout(()=>window.location.href = 'summary.html', 1200);
+    setTimeout(gotoSummary, 1200);
   });
 });
 
@@ -96,6 +94,7 @@ getLocationBtn.onclick = function(e) {
     return;
   }
   getLocationBtn.textContent = 'กำลังค้นหาตำแหน่ง...';
+  getLocationBtn.disabled = true;
   navigator.geolocation.getCurrentPosition(async pos => {
     const lat = pos.coords.latitude;
     const lng = pos.coords.longitude;
@@ -107,15 +106,76 @@ getLocationBtn.onclick = function(e) {
       const data = await res.json();
       if (data.results && data.results[0]) {
         addressInput.value = data.results[0].formatted_address;
+        showToast('ดึงที่อยู่สำเร็จ', 1800);
       } else {
-        addressInput.value = 'ไม่พบที่อยู่';
+        addressInput.value = '';
+        showToast('ไม่พบที่อยู่', 1800);
       }
     } catch {
-      addressInput.value = 'ไม่พบที่อยู่';
+      addressInput.value = '';
+      showToast('ไม่สามารถดึงที่อยู่ได้', 1800);
     }
     getLocationBtn.textContent = '📍 ใช้ตำแหน่งจากแผนที่';
+    getLocationBtn.disabled = false;
   }, err => {
     showToast('ไม่สามารถระบุตำแหน่งได้');
     getLocationBtn.textContent = '📍 ใช้ตำแหน่งจากแผนที่';
+    getLocationBtn.disabled = false;
   });
 };
+
+// --- Real-time validation เบอร์โทร/ที่อยู่ซ้ำ ---
+const phoneInput = document.getElementById('phoneInput');
+phoneInput.addEventListener('input', function() {
+  const val = phoneInput.value.trim();
+  if (!/^\d{9,12}$/.test(val)) {
+    phoneInput.style.borderColor = '#d32f2f';
+  } else {
+    phoneInput.style.borderColor = '#FFA726';
+    // ตรวจสอบซ้ำใน localStorage
+    const orders = JSON.parse(localStorage.getItem('adminOrders')||'[]');
+    if (orders.some(o => o.phone === val)) {
+      showToast('เบอร์นี้เคยสั่งซื้อแล้ว', 1800);
+      phoneInput.style.borderColor = '#FFD700';
+    }
+  }
+});
+addressInput.addEventListener('blur', function() {
+  const val = addressInput.value.trim();
+  if (val.length < 8) {
+    addressInput.style.borderColor = '#d32f2f';
+    showToast('กรุณากรอกที่อยู่ให้ครบถ้วน', 1800);
+  } else {
+    addressInput.style.borderColor = '#FFA726';
+  }
+});
+
+// --- Loading/animation ขณะเปลี่ยนหน้า ---
+function showPageLoading() {
+  let loading = document.getElementById('pageLoading');
+  if (!loading) {
+    loading = document.createElement('div');
+    loading.id = 'pageLoading';
+    loading.style.position = 'fixed';
+    loading.style.left = '0';
+    loading.style.top = '0';
+    loading.style.width = '100vw';
+    loading.style.height = '100vh';
+    loading.style.background = 'rgba(255,255,255,0.7)';
+    loading.style.display = 'flex';
+    loading.style.alignItems = 'center';
+    loading.style.justifyContent = 'center';
+    loading.innerHTML = '<div style="border:6px solid #FFA726;border-top:6px solid #fff;border-radius:50%;width:54px;height:54px;animation:spin 1s linear infinite;"></div>';
+    document.body.appendChild(loading);
+  }
+  loading.style.display = 'flex';
+}
+function hidePageLoading() {
+  const loading = document.getElementById('pageLoading');
+  if (loading) loading.style.display = 'none';
+}
+// ใช้ loading ตอนเปลี่ยนหน้า
+function gotoSummary() {
+  showPageLoading();
+  setTimeout(()=>{ window.location.href = 'summary.html'; }, 600);
+}

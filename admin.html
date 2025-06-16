@@ -5,12 +5,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - LUCKY Delivery</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Loading Spinner Overlay */
+    #globalLoading {
+      display: none;
+      position: fixed;
+      z-index: 99999;
+      left: 0; top: 0; right: 0; bottom: 0;
+      background: rgba(255,255,255,0.7);
+      align-items: center;
+      justify-content: center;
+    }
+    #globalLoading .spinner {
+      border: 6px solid #FFA726;
+      border-top: 6px solid #fff;
+      border-radius: 50%;
+      width: 54px; height: 54px;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
+    @media (max-width: 600px) {
+      h1, h2, h3 { font-size: 1.1em; }
+      .container { padding: 0.5em 0.1em; }
+      section { margin-bottom: 1.2em; }
+      table { font-size: 0.98em; }
+    }
+  </style>
 </head>
 <body>
+  <div id="globalLoading"><div class="spinner"></div></div>
   <header>
     <h1>Admin - จัดการสินค้าและดูออเดอร์</h1>
   </header>
   <main class="container">
+    <section style="margin-bottom:2em;">
+      <h2>Dashboard</h2>
+      <div id="summaryBox" style="margin-bottom:1.2em;"></div>
+      <div style="display:flex;flex-wrap:wrap;gap:2em;">
+        <div style="flex:1;min-width:220px;">
+          <h3 style="margin-bottom:0.5em;">5 ออเดอร์ล่าสุด</h3>
+          <div id="recentOrders"></div>
+        </div>
+        <div style="flex:1;min-width:220px;">
+          <h3 style="margin-bottom:0.5em;">สต็อกสินค้า</h3>
+          <div id="stockLevels"></div>
+        </div>
+      </div>
+    </section>
+    <hr style="margin:2em 0;">
     <section>
       <h2>แก้ไขสินค้า/ราคา</h2>
       <div id="productAdmin"></div>
@@ -19,9 +61,21 @@
     <hr style="margin:2em 0;">
     <section>
       <h2>รายการสั่งซื้อ</h2>
+      <input id="orderSearch" type="text" placeholder="ค้นหาออเดอร์ (ชื่อ, เบอร์, สถานะ)" style="width:100%;max-width:320px;margin-bottom:1em;padding:0.7em 1em;border-radius:8px;border:1.2px solid #FFA726;">
       <div id="ordersAdmin"></div>
     </section>
   </main>
   <script src="admin.js"></script>
+  <script>
+    renderAdminDashboard();
+    // Responsive: ปรับขนาดตารางและ section อัตโนมัติด้วย CSS แล้ว
+    // Loading indicator: ให้ admin.js เรียก show/hideGlobalLoading() ทุกครั้งที่ fetch/save network
+    window.showGlobalLoading = function() {
+      document.getElementById('globalLoading').style.display = 'flex';
+    };
+    window.hideGlobalLoading = function() {
+      document.getElementById('globalLoading').style.display = 'none';
+    };
+  </script>
 </body>
 </html>

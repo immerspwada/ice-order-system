@@ -60,5 +60,29 @@
       document.querySelector('.product-list').innerHTML = '<div style="color:#d32f2f;text-align:center;padding:2em 0;">ไม่พบสินค้า กรุณารีเฟรชหน้าหรือแจ้งผู้ดูแลระบบ</div>';
     }
   </script>
+  <script>
+    getLocationBtn.onclick = function(e) {
+      e.preventDefault();
+      if (!navigator.geolocation) {
+        showToast('เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง');
+        return;
+      }
+      getLocationBtn.textContent = 'กำลังค้นหาตำแหน่ง...';
+      getLocationBtn.disabled = true;
+      navigator.geolocation.getCurrentPosition(pos => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        mapPreview.innerHTML = `<div style="color:#FFA726;">พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>`;
+        addressInput.value = `พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+        showToast('คัดลอกพิกัดเรียบร้อย', 1800);
+        getLocationBtn.textContent = '📍 ใช้ตำแหน่งจากแผนที่';
+        getLocationBtn.disabled = false;
+      }, err => {
+        showToast('ไม่สามารถระบุตำแหน่งได้');
+        getLocationBtn.textContent = '📍 ใช้ตำแหน่งจากแผนที่';
+        getLocationBtn.disabled = false;
+      });
+    };
+  </script>
 </body>
 </html>
