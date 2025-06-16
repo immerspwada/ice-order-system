@@ -14,6 +14,14 @@
         liff.init({ liffId }).then(() => {
           if (!liff.isLoggedIn()) {
             liff.login();
+          } else {
+            liff.getProfile().then(profile => {
+              var box = document.getElementById('lineProfileBox');
+              if (box) {
+                box.innerHTML = `<img src="${profile.pictureUrl}" style="width:38px;height:38px;border-radius:50%;vertical-align:middle;margin-right:0.5em;box-shadow:0 2px 8px #ffd70099;"> <span style="font-weight:700;">${profile.displayName}</span>`;
+                box.style.display = '';
+              }
+            });
           }
         });
       }
@@ -21,13 +29,14 @@
   </script>
 </head>
 <body>
-  <header>
+  <header style="position:relative;">
     <nav class="stepper">
       <div class="step active"><span>1</span><div>เลือกสินค้า</div></div>
       <div class="step"><span>2</span><div>ข้อมูลลูกค้า</div></div>
       <div class="step"><span>3</span><div>ยืนยัน</div></div>
       <div class="step"><span>4</span><div>เสร็จสิ้น</div></div>
     </nav>
+    <div id="lineProfileBox" style="display:none;position:absolute;top:0.7em;right:1.2em;text-align:right;z-index:20;"></div>
   </header>
   <main class="container">
     <h1>เลือกสินค้า</h1>

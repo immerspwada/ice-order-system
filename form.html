@@ -5,6 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>กรอกข้อมูลลูกค้า</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+    // บังคับให้ล็อกอิน LINE ก่อนกรอกข้อมูลจัดส่ง
+    document.addEventListener('DOMContentLoaded', function() {
+      var liffId = '2006986568-yjrOkKqm';
+      if (window.liff) {
+        liff.init({ liffId }).then(() => {
+          if (!liff.isLoggedIn()) {
+            liff.login();
+          }
+        });
+      }
+    });
+  </script>
 </head>
 <body>
   <header>
@@ -27,12 +41,11 @@
       <input id="phoneInput" type="tel" name="phone" required pattern="[0-9]{9,12}" maxlength="12" autocomplete="tel" placeholder="เช่น 0891234567">
       <label class="input-label" for="addressInput">ที่อยู่สำหรับจัดส่ง <span style="color:red">*</span></label>
       <textarea id="addressInput" name="address" rows="3" required maxlength="120" autocomplete="street-address" placeholder="บ้านเลขที่ หมู่/ซอย ถนน ตำบล อำเภอ จังหวัด"></textarea>
-      <button type="button" id="getLocationBtn" class="btn-main" style="background:#e0f7fa;color:#00bfff;margin-top:0.7em;">📍 ใช้ตำแหน่งจากแผนที่</button>
+      <button type="button" id="getLocationBtn" class="btn-main" style="background:#FFA726;color:#fff;margin-top:0.7em;">📍 ใช้ตำแหน่งจากแผนที่</button>
       <div id="mapPreview" style="margin:0.7em 0 0.5em 0;"></div>
       <button type="submit" class="btn-main">ถัดไป</button>
     </form>
   </main>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script src="form.js"></script>
 </body>
 </html>
