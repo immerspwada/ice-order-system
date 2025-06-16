@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>กรอกข้อมูลลูกค้า</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav class="stepper">
+      <div class="step"><span>1</span><div>เลือกสินค้า</div></div>
+      <div class="step active"><span>2</span><div>ข้อมูลลูกค้า</div></div>
+      <div class="step"><span>3</span><div>ยืนยัน</div></div>
+      <div class="step"><span>4</span><div>เสร็จสิ้น</div></div>
+    </nav>
+  </header>
+  <main class="container">
+    <h1>กรอกข้อมูลลูกค้า</h1>
+    <form id="customerForm" autocomplete="on">
+      <div class="form-hint">กรุณากรอกข้อมูลให้ครบถ้วนเพื่อความสะดวกในการจัดส่ง</div>
+      <label class="input-label" for="nameInput">ชื่อ-นามสกุล <span style="color:red">*</span></label>
+      <input id="nameInput" type="text" name="name" required maxlength="50" autocomplete="name" placeholder="กรอกชื่อ-นามสกุล หรือชื่อเล่น">
+      <label class="input-label" for="phoneInput">เบอร์โทรศัพท์ <span style="color:red">*</span></label>
+      <input id="phoneInput" type="tel" name="phone" required pattern="[0-9]{9,12}" maxlength="12" autocomplete="tel" placeholder="เช่น 0891234567">
+      <label class="input-label" for="addressInput">ที่อยู่สำหรับจัดส่ง <span style="color:red">*</span></label>
+      <textarea id="addressInput" name="address" rows="3" required maxlength="120" autocomplete="street-address" placeholder="บ้านเลขที่ หมู่/ซอย ถนน ตำบล อำเภอ จังหวัด"></textarea>
+      <button type="submit" class="btn-main">ถัดไป</button>
+    </form>
+  </main>
+  <script src="form.js"></script>
+</body>
+</html>

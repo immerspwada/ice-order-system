@@ -1,0 +1,54 @@
+<!-- หน้าใบเสร็จ -->
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>สั่งซื้อ LUCKY - ใบเสร็จ</title>
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="html2pdf.bundle.min.js"></script>
+</head>
+<body>
+  <header>
+    <nav class="stepper">
+      <div class="step"><span>1</span><div>เลือกสินค้า</div></div>
+      <div class="step"><span>2</span><div>ข้อมูลลูกค้า</div></div>
+      <div class="step"><span>3</span><div>ยืนยัน</div></div>
+      <div class="step active"><span>4</span><div>เสร็จสิ้น</div></div>
+    </nav>
+  </header>
+  <div id="receipt">
+    <!-- Receipt content will be rendered here by receipt.js -->
+    <div style="text-align:center;margin-top:1.5rem;">
+      <button id="downloadPdfBtn" style="background:linear-gradient(90deg,#FFD700 0%,#FFF8DC 100%);color:#181818;padding:1.1rem 2.2rem;border:none;border-radius:12px;font-size:1.13rem;font-weight:700;box-shadow:0 2px 12px #fffbe7;transition:background 0.2s, color 0.2s;letter-spacing:0.5px;border:1.5px solid #fff8dc;">ดาวน์โหลดใบเสร็จ (PDF)</button>
+    </div>
+  </div>
+  <script src="receipt.js"></script>
+  <script>
+    // --- PDF Button State Management ---
+    const pdfBtn = document.getElementById('downloadPdfBtn');
+    let originalBtnText = pdfBtn.textContent;
+    pdfBtn.disabled = false;
+    pdfBtn.style.opacity = '1';
+    pdfBtn.style.cursor = 'pointer';
+    pdfBtn.onclick = function() {
+      if (typeof window.html2pdf === 'undefined') {
+        alert('ไม่สามารถดาวน์โหลด PDF ได้\nกรุณาตรวจสอบว่าไฟล์ html2pdf.bundle.min.js อยู่ในโฟลเดอร์เดียวกับ receipt.html');
+        return;
+      }
+      pdfBtn.disabled = true;
+      pdfBtn.textContent = 'กำลังสร้าง PDF...';
+      window.html2pdf().from(document.getElementById('receipt')).set({
+        margin: 10,
+        filename: 'receipt.pdf',
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      }).save().finally(() => {
+        pdfBtn.disabled = false;
+        pdfBtn.textContent = originalBtnText;
+      });
+    };
+  </script>
+</body>
+</html>

@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เลือกสินค้า - LUCKY Delivery</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <nav class="stepper">
+      <div class="step active"><span>1</span><div>เลือกสินค้า</div></div>
+      <div class="step"><span>2</span><div>ข้อมูลลูกค้า</div></div>
+      <div class="step"><span>3</span><div>ยืนยัน</div></div>
+      <div class="step"><span>4</span><div>เสร็จสิ้น</div></div>
+    </nav>
+  </header>
+  <main class="container">
+    <h1>เลือกสินค้า</h1>
+    <section class="product-catalog">
+      <form id="productForm">
+        <div class="product-list" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.2em;">
+          <!-- สินค้าทั้งหมดจะถูก render ด้วย JS -->
+        </div>
+        <div class="cart-summary">
+          <span id="totalPrice">รวม: ฿0</span>
+          <button type="submit" class="btn-main">ถัดไป</button>
+        </div>
+      </form>
+      <div id="cartNotice" class="cart-notice"></div>
+    </section>
+  </main>
+  <script src="order.js"></script>
+  <script>
+    // ตรวจสอบว่า order.js ถูกโหลดและ renderProducts ถูกเรียกหรือไม่
+    if (!document.querySelector('.product-list').children.length) {
+      document.querySelector('.product-list').innerHTML = '<div style="color:#d32f2f;text-align:center;padding:2em 0;">ไม่พบสินค้า กรุณารีเฟรชหน้าหรือแจ้งผู้ดูแลระบบ</div>';
+    }
+  </script>
+</body>
+</html>
