@@ -27,6 +27,8 @@
       <input id="phoneInput" type="tel" name="phone" required pattern="[0-9]{9,12}" maxlength="12" autocomplete="tel" placeholder="เช่น 0891234567">
       <label class="input-label" for="addressInput">ที่อยู่สำหรับจัดส่ง <span style="color:red">*</span></label>
       <textarea id="addressInput" name="address" rows="3" required maxlength="120" autocomplete="street-address" placeholder="บ้านเลขที่ หมู่/ซอย ถนน ตำบล อำเภอ จังหวัด"></textarea>
+      <button type="button" id="getLocationBtn" class="btn-main" style="background:#e0f7fa;color:#00bfff;margin-top:0.7em;">📍 ใช้ตำแหน่งจากแผนที่</button>
+      <div id="mapPreview" style="margin:0.7em 0 0.5em 0;"></div>
       <button type="submit" class="btn-main">ถัดไป</button>
     </form>
   </main>

@@ -129,9 +129,10 @@ async function displayUserNameFromLINE() {
 
 // LIFF init (optional, if you want to use liff.sendMessages or closeWindow)
 if (typeof liff !== 'undefined') {
-  liff.init({ liffId: 'YOUR_LIFF_ID' }).then(() => {
+  liff.init({ liffId: 'U56b89fa4ea4169863a687fe972fa3836' }).then(() => {
     renderSummary();
     renderLiffCloseBtn();
+    displayUserNameFromLINE();
   });
 } else {
   renderSummary();
