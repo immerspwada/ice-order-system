@@ -33,11 +33,21 @@ const orderProducts = JSON.parse(sessionStorage.getItem('orderProducts') || '{}'
 const customerInfo = JSON.parse(sessionStorage.getItem('customerInfo') || '{}');
 let slipDataUrl = sessionStorage.getItem('slipDataUrl') || '';
 
+const lineUserId = sessionStorage.getItem('lineUserId') || '';
+const lineProfileName = customerInfo.name || '';
+
 function renderSummary() {
   let html = `<div style="text-align:center;margin-bottom:1.2rem;">
     <svg width="48" height="48" viewBox="0 0 56 56" fill="none" style="vertical-align:middle;"><circle cx="28" cy="28" r="28" fill="#FFA726"/><path d="M17 29.5L25.5 38L39 22" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
     <div style="font-size:1.35rem;font-weight:700;color:#FFA726;margin-top:0.5rem;letter-spacing:0.5px;">ตรวจสอบข้อมูลก่อนยืนยัน</div>
   </div>`;
+  // แสดง LINE Profile ถ้ามี
+  if (lineUserId) {
+    html += `<div style='background:#e0f7fa;border-radius:12px;padding:0.7em 1em;margin-bottom:1em;text-align:left;max-width:420px;margin-left:auto;margin-right:auto;'>
+      <b style='color:#00bfff;'>บัญชี LINE:</b> <span style='font-weight:600;'>${lineProfileName}</span><br>
+      <span style='font-size:0.97em;color:#888;'>userId: <span style='font-family:monospace;'>${lineUserId}</span></span>
+    </div>`;
+  }
   html += `<div style="background:#FFF3E0;border-radius:16px;padding:1.2rem 1.2rem 0.7rem 1.2rem;box-shadow:0 2px 8px #ffe0b2;border:1.2px solid #FFA726;max-width:420px;margin:auto;">
     <div style="font-size:1.13rem;font-weight:600;color:#FFA726;margin-bottom:0.7rem;">ข้อมูลลูกค้า</div>
     <div style="font-size:1.05rem;margin-bottom:0.7rem;line-height:1.7;">
@@ -98,6 +108,23 @@ function renderSummary() {
     } catch(e) {}
     window.location.href = 'receipt.html';
   };
+}
+
+// ดึงชื่อจาก LINE LIFF profile แล้วแสดงชื่อผู้ใช้ที่ล็อกอินใน element ที่มี id="username"
+async function displayUserNameFromLINE() {
+  if (typeof liff === 'undefined') return;
+  try {
+    await liff.init({ liffId: 'U56b89fa4ea4169863a687fe972fa3836' });
+    if (!liff.isLoggedIn()) {
+      liff.login();
+      return;
+    }
+    const profile = await liff.getProfile();
+    const el = document.getElementById('username');
+    if (el) el.textContent = profile.displayName;
+  } catch (e) {
+    // กรณี error ไม่ต้องแสดงอะไร
+  }
 }
 
 // LIFF init (optional, if you want to use liff.sendMessages or closeWindow)

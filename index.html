@@ -31,6 +31,34 @@
     </section>
   </main>
   <script src="order.js"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+    // บังคับให้ล็อกอิน LINE ก่อนใช้งาน
+    const liffId = 'U56b89fa4ea4169863a687fe972fa3836';
+    window.onload = function() {
+      if (window.liff) {
+        liff.init({ liffId }).then(() => {
+          if (!liff.isLoggedIn()) {
+            liff.login();
+          }
+        });
+      }
+    };
+  </script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+    // บังคับให้ล็อกอิน LINE ก่อนใช้งาน
+    const liffId = 'U56b89fa4ea4169863a687fe972fa3836';
+    window.onload = function() {
+      if (window.liff) {
+        liff.init({ liffId }).then(() => {
+          if (!liff.isLoggedIn()) {
+            liff.login();
+          }
+        });
+      }
+    };
+  </script>
   <script>
     // ตรวจสอบว่า order.js ถูกโหลดและ renderProducts ถูกเรียกหรือไม่
     if (!document.querySelector('.product-list').children.length) {
