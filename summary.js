@@ -95,7 +95,7 @@ function renderSummary() {
   document.getElementById('editOrderBtn').onclick = function() {
     window.location.href = 'form.html';
   };
-  document.getElementById('toReceiptBtn').onclick = function() {
+  document.getElementById('toReceiptBtn').onclick = async function() {
     // Merge all data and go to receipt
     const orderData = { ...customerInfo, products: orderProducts, slip: slipDataUrl };
     sessionStorage.setItem('orderData', JSON.stringify(orderData));
@@ -105,6 +105,18 @@ function renderSummary() {
       orderData.datetime = new Date().toLocaleString('th-TH', { hour12: false });
       orders.push(orderData);
       localStorage.setItem('adminOrders', JSON.stringify(orders));
+    } catch(e) {}
+    // --- ส่ง Flex Message ไป LINE ลูกค้า ---
+    try {
+      await fetch('https://your-backend/send-flex', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: customerInfo.lineUserId,
+          order: orderData,
+          receiptUrl: window.location.origin + '/receipt.html'
+        })
+      });
     } catch(e) {}
     window.location.href = 'receipt.html';
   };
@@ -137,3 +149,5 @@ if (typeof liff !== 'undefined') {
 } else {
   renderSummary();
 }
+
+//# sourceMappingURL=summary.js.map

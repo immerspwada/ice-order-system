@@ -52,7 +52,14 @@ function showToast(msg, ms=2200) {
   setTimeout(()=>toast.classList.remove('show'), ms);
 }
 
+// --- ตรวจสอบ session LINE ก่อนกรอกข้อมูล ---
 document.addEventListener('DOMContentLoaded', () => {
+  const lineUserId = sessionStorage.getItem('lineUserId');
+  if (!lineUserId) {
+    showToast('กรุณาเข้าสู่ระบบด้วย LINE ใหม่', 1500);
+    setTimeout(()=>window.location.href = 'index.html', 1500);
+    return;
+  }
   const form = document.getElementById('customerForm');
   form.addEventListener('submit', function(e) {
     e.preventDefault();

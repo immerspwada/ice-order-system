@@ -6,19 +6,7 @@
   <title>กรอกข้อมูลลูกค้า</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script>
-    // บังคับให้ล็อกอิน LINE ก่อนกรอกข้อมูลจัดส่ง
-    document.addEventListener('DOMContentLoaded', function() {
-      var liffId = '2006986568-yjrOkKqm';
-      if (window.liff) {
-        liff.init({ liffId }).then(() => {
-          if (!liff.isLoggedIn()) {
-            liff.login();
-          }
-        });
-      }
-    });
-  </script>
+  <!-- ลบสคริปต์บังคับ login LINE ทันทีออก -->
 </head>
 <body>
   <header>
