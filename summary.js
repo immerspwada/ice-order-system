@@ -299,7 +299,9 @@ function renderSummary() {
         orders.push(orderData);
         localStorage.setItem('adminOrders', JSON.stringify(orders));
       } catch(e) {}
-      setTimeout(() => { // simulate loading
+      // Send order summary to LINE chat
+      sendOrderSummaryToChat(orderProducts, total + shipping - discount);
+      setTimeout(() => {
         window.location.href = 'receipt.html';
       }, 600);
     };
@@ -454,4 +456,18 @@ function renderOrderSummary(orderProducts, shipping) {
     </div>
   `;
   return html;
+}
+
+// ส่งข้อความสรุปคำสั่งซื้อไปยังแชทของลูกค้า
+function sendOrderSummaryToChat(orderProducts, total) {
+  if (window.liff && liff.isApiAvailable && liff.isApiAvailable('shareTargetPicker')) {
+    const items = Object.values(orderProducts)
+      .filter(p => p && p.qty > 0)
+      .map(p => `${p.icon ? p.icon + ' ' : ''}${p.name} x${p.qty} = ฿${(p.price * p.qty).toLocaleString()}`)
+      .join('\n');
+    const msg = `ขอบคุณที่สั่งซื้อกับ LUCKY Delivery\n\nรายการที่สั่ง:\n${items}\n\nรวมทั้งสิ้น: ฿${total.toLocaleString()}`;
+    liff.sendMessages([
+      { type: 'text', text: msg }
+    ]).catch(() => {});
+  }
 }
