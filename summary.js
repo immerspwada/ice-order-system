@@ -234,43 +234,41 @@ async function displayUserNameFromLINE() {
   }
 }
 
-// --- ป้องกัน redirect loop: ถ้า login แล้วแต่ sessionStorage ไม่มีข้อมูล ให้ดึงจาก localStorage และ liff profile ---
-(async function ensureSessionData() {
-  const liffId = 'U56b89fa4ea4169863a687fe972fa3836';
-  if (typeof liff !== 'undefined') {
-    try {
-      await liff.init({ liffId });
-      if (liff.isLoggedIn()) {
-        // sync profile จาก liff
-        const profile = await liff.getProfile();
-        localStorage.setItem('displayName', profile.displayName);
-        localStorage.setItem('pictureUrl', profile.pictureUrl);
-        localStorage.setItem('lineUserId', profile.userId);
-        localStorage.setItem('lineAccessToken', liff.getAccessToken());
-        sessionStorage.setItem('lineUserId', profile.userId);
-        sessionStorage.setItem('lineAccessToken', liff.getAccessToken());
-        // sync customerInfo จาก localStorage ถ้าไม่มีใน sessionStorage
-        if (!sessionStorage.getItem('customerInfo') && localStorage.getItem('customerInfo')) {
-          sessionStorage.setItem('customerInfo', localStorage.getItem('customerInfo'));
-        }
-        if (!sessionStorage.getItem('orderProducts') && localStorage.getItem('orderProducts')) {
-          sessionStorage.setItem('orderProducts', localStorage.getItem('orderProducts'));
-        }
-      }
-    } catch(e) {}
+// --- LIFF init/profile แบบเดียวกันสำหรับ github.io ---
+const liffId = 'U56b89fa4ea4169863a687fe972fa3836';
+async function liffInitAndProfile() {
+  if (typeof liff === 'undefined') return false;
+  try {
+    await liff.init({ liffId });
+    if (!liff.isLoggedIn()) {
+      liff.login({ redirectUri: window.location.href });
+      return false;
+    }
+    const profile = await liff.getProfile();
+    localStorage.setItem("displayName", profile.displayName);
+    localStorage.setItem("pictureUrl", profile.pictureUrl);
+    localStorage.setItem("lineUserId", profile.userId);
+    localStorage.setItem("lineAccessToken", liff.getAccessToken());
+    sessionStorage.setItem("lineUserId", profile.userId);
+    sessionStorage.setItem("lineAccessToken", liff.getAccessToken());
+    return true;
+  } catch (e) {
+    console.error("LIFF init error:", e);
+    if (e && e.message) console.error("LIFF error message:", e.message);
+    if (e && e.stack) console.error("LIFF error stack:", e.stack);
+    alert("เกิดข้อผิดพลาดในการโหลด LINE Login");
+    return false;
   }
-})();
-
-// LIFF init (optional, if you want to use liff.sendMessages or closeWindow)
-if (typeof liff !== 'undefined') {
-  liff.init({ liffId: 'U56b89fa4ea4169863a687fe972fa3836' }).then(() => {
-    renderSummary();
-    renderLiffCloseBtn();
-    displayUserNameFromLINE();
-  });
-} else {
-  renderSummary();
 }
+
+// เรียกใช้ liffInitAndProfile ก่อน logic อื่น ๆ
+(async function() {
+  const ok = await liffInitAndProfile();
+  if (!ok) return;
+  renderSummary();
+  renderLiffCloseBtn();
+  displayUserNameFromLINE();
+})();
 
 const name = localStorage.getItem("displayName");
 if (!name) {

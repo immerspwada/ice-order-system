@@ -31,6 +31,30 @@
       table { font-size: 0.98em; }
     }
   </style>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', async function () {
+    const liffId = 'U56b89fa4ea4169863a687fe972fa3836';
+    try {
+      await liff.init({ liffId });
+      if (!liff.isLoggedIn()) {
+        liff.login({ redirectUri: window.location.href });
+      } else {
+        const profile = await liff.getProfile();
+        localStorage.setItem("displayName", profile.displayName);
+        localStorage.setItem("pictureUrl", profile.pictureUrl);
+        const box = document.getElementById('lineProfileBox');
+        if (box) {
+          box.innerHTML = `<img src="${profile.pictureUrl}" style="width:38px;height:38px;border-radius:50%;vertical-align:middle;margin-right:0.5em;box-shadow:0 2px 8px #ffd70099;"> <span style="font-weight:700;">${profile.displayName}</span>`;
+          box.style.display = '';
+        }
+      }
+    } catch (err) {
+      alert('เกิดข้อผิดพลาดในการโหลด LINE Login');
+      console.error(err);
+    }
+  });
+  </script>
 </head>
 <body>
   <div id="globalLoading"><div class="spinner"></div></div>
