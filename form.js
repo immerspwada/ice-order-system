@@ -1,10 +1,8 @@
 // form.js - Step 2: Customer Info Form
-// Clean, modular JS for customer info and sessionStorage
-
-const liffId = '2006986568-yjrOkKqm';
+// LIFF LINE Login & Profile (consistent with index.html)
+const liffId = 'U56b89fa4ea4169863a687fe972fa3836';
 const lineProfileBox = document.getElementById('lineProfileBox');
 const customerForm = document.getElementById('customerForm');
-let isLoggedIn = false;
 
 function showProfile(profile) {
   lineProfileBox.innerHTML = `
@@ -17,65 +15,70 @@ function showProfile(profile) {
   sessionStorage.setItem('lineUserId', profile.userId);
 }
 
-function renderLoginState() {
-  if (isLoggedIn) {
-    // แสดงฟอร์ม
-    if (customerForm) customerForm.style.display = '';
-    if (lineProfileBox) lineProfileBox.style.display = '';
-    const msg = document.getElementById('loginMsg');
-    if (msg) msg.style.display = 'none';
-  } else {
-    // ซ่อนฟอร์ม แสดงปุ่ม login + ข้อความ
-    if (customerForm) customerForm.style.display = 'none';
-    if (lineProfileBox) lineProfileBox.style.display = 'none';
-    let msg = document.getElementById('loginMsg');
-    if (!msg) {
-      msg = document.createElement('div');
-      msg.id = 'loginMsg';
-      msg.style = 'text-align:center;margin:2em 0;color:#d32f2f;font-weight:600;';
-      document.body.appendChild(msg);
-    }
-    msg.innerHTML = `
-      <div style='margin-bottom:1.2em;'>กรุณาเข้าสู่ระบบด้วย LINE ก่อนกรอกข้อมูล</div>
-      <button id='lineLoginBtn' class='btn-main' style='width:auto;'>เข้าสู่ระบบด้วย LINE</button>
-    `;
-    msg.style.display = '';
-    document.getElementById('lineLoginBtn').onclick = () => {
-      if (window.liff) {
-        liff.init({ liffId }).then(() => {
-          liff.login();
-        });
-      }
-    };
+function showLoginMessage() {
+  if (customerForm) customerForm.style.display = 'none';
+  if (lineProfileBox) lineProfileBox.style.display = 'none';
+  let msg = document.getElementById('loginMsg');
+  if (!msg) {
+    msg = document.createElement('div');
+    msg.id = 'loginMsg';
+    msg.style = 'text-align:center;margin:2em 0;color:#d32f2f;font-weight:600;';
+    document.body.appendChild(msg);
   }
+  msg.innerHTML = `กรุณาเข้าสู่ระบบด้วย LINE ก่อนกรอกข้อมูล`;
+  msg.style.display = '';
 }
 
-function liffInitAndCheckLogin() {
+document.addEventListener('DOMContentLoaded', () => {
   if (!window.liff) {
-    isLoggedIn = false;
-    renderLoginState();
+    showLoginMessage();
     return;
   }
   liff.init({ liffId }).then(() => {
     if (!liff.isLoggedIn()) {
-      isLoggedIn = false;
-      renderLoginState();
-    } else {
-      isLoggedIn = true;
-      liff.getProfile().then(profile => {
-        showProfile(profile);
-        renderLoginState();
-        // Autofill จาก sessionStorage ถ้ามี
-        const info = JSON.parse(sessionStorage.getItem('customerInfo')||'null');
-        if (info) {
-          document.getElementById('nameInput').value = info.name||'';
-          document.getElementById('phoneInput').value = info.phone||'';
-          document.getElementById('addressInput').value = info.address||'';
-        }
-      });
+      showLoginMessage();
+      liff.login();
+      return;
     }
+    liff.getProfile().then(profile => {
+      if (lineProfileBox) showProfile(profile);
+      if (customerForm) customerForm.style.display = '';
+      let msg = document.getElementById('loginMsg');
+      if (msg) msg.style.display = 'none';
+      // Autofill จาก sessionStorage ถ้ามี
+      const info = JSON.parse(sessionStorage.getItem('customerInfo')||'null');
+      if (info) {
+        document.getElementById('nameInput').value = info.name||'';
+        document.getElementById('phoneInput').value = info.phone||'';
+        document.getElementById('addressInput').value = info.address||'';
+      }
+    });
   });
-}
+
+  // --- ฟอร์ม submit ---
+  if (customerForm) {
+    customerForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = customerForm.name.value.trim();
+      const phone = customerForm.phone.value.trim();
+      const address = customerForm.address.value.trim();
+      const lineUserId = sessionStorage.getItem('lineUserId') || '';
+      if (!name || !phone || !address) {
+        showToast('กรุณากรอกข้อมูลให้ครบถ้วน');
+        return;
+      }
+      if (!/^\d{9,12}$/.test(phone)) {
+        showToast('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง');
+        return;
+      }
+      // Save to sessionStorage
+      const customerInfo = { name, phone, address, lineUserId };
+      sessionStorage.setItem('customerInfo', JSON.stringify(customerInfo));
+      showToast('บันทึกข้อมูลสำเร็จ', 1200);
+      setTimeout(gotoSummary, 1200);
+    });
+  }
+});
 
 // --- Toast Notification ---
 function showToast(msg, ms=2200) {
