@@ -1,9 +1,10 @@
 // form.js - Step 2: Customer Info Form
 // Clean, modular JS for customer info and sessionStorage
 
-// --- LIFF LINE Login & Profile ---
-const liffId = '2006986568-yjrOkKqm'; // liffId จริงจากผู้ใช้
+const liffId = '2006986568-yjrOkKqm';
 const lineProfileBox = document.getElementById('lineProfileBox');
+const customerForm = document.getElementById('customerForm');
+let isLoggedIn = false;
 
 function showProfile(profile) {
   lineProfileBox.innerHTML = `
@@ -13,26 +14,67 @@ function showProfile(profile) {
   `;
   lineProfileBox.style.display = '';
   document.getElementById('nameInput').value = profile.displayName;
-  // เก็บ userId ใน sessionStorage ด้วย
   sessionStorage.setItem('lineUserId', profile.userId);
 }
 
-function liffInitAndGetProfile() {
-  if (!window.liff) return;
+function renderLoginState() {
+  if (isLoggedIn) {
+    // แสดงฟอร์ม
+    if (customerForm) customerForm.style.display = '';
+    if (lineProfileBox) lineProfileBox.style.display = '';
+    const msg = document.getElementById('loginMsg');
+    if (msg) msg.style.display = 'none';
+  } else {
+    // ซ่อนฟอร์ม แสดงปุ่ม login + ข้อความ
+    if (customerForm) customerForm.style.display = 'none';
+    if (lineProfileBox) lineProfileBox.style.display = 'none';
+    let msg = document.getElementById('loginMsg');
+    if (!msg) {
+      msg = document.createElement('div');
+      msg.id = 'loginMsg';
+      msg.style = 'text-align:center;margin:2em 0;color:#d32f2f;font-weight:600;';
+      document.body.appendChild(msg);
+    }
+    msg.innerHTML = `
+      <div style='margin-bottom:1.2em;'>กรุณาเข้าสู่ระบบด้วย LINE ก่อนกรอกข้อมูล</div>
+      <button id='lineLoginBtn' class='btn-main' style='width:auto;'>เข้าสู่ระบบด้วย LINE</button>
+    `;
+    msg.style.display = '';
+    document.getElementById('lineLoginBtn').onclick = () => {
+      if (window.liff) {
+        liff.init({ liffId }).then(() => {
+          liff.login();
+        });
+      }
+    };
+  }
+}
+
+function liffInitAndCheckLogin() {
+  if (!window.liff) {
+    isLoggedIn = false;
+    renderLoginState();
+    return;
+  }
   liff.init({ liffId }).then(() => {
     if (!liff.isLoggedIn()) {
-      liff.login();
+      isLoggedIn = false;
+      renderLoginState();
     } else {
+      isLoggedIn = true;
       liff.getProfile().then(profile => {
         showProfile(profile);
+        renderLoginState();
+        // Autofill จาก sessionStorage ถ้ามี
+        const info = JSON.parse(sessionStorage.getItem('customerInfo')||'null');
+        if (info) {
+          document.getElementById('nameInput').value = info.name||'';
+          document.getElementById('phoneInput').value = info.phone||'';
+          document.getElementById('addressInput').value = info.address||'';
+        }
       });
     }
   });
-}
-
-// auto init if in LIFF
-if (window.liff && window.location.search.includes('liff.state')) {
-  liffInitAndGetProfile();
 }
 
 // --- Toast Notification ---
@@ -47,108 +89,6 @@ function showToast(msg, ms=2200) {
   toast.classList.add('show');
   setTimeout(()=>toast.classList.remove('show'), ms);
 }
-
-// --- ตรวจสอบ session LINE ก่อนกรอกข้อมูล (ปรับ UX ไม่ redirect ทันที) ---
-document.addEventListener('DOMContentLoaded', () => {
-  const lineUserId = sessionStorage.getItem('lineUserId');
-  if (!lineUserId) {
-    showToast('กรุณาเข้าสู่ระบบด้วย LINE ก่อนกรอกข้อมูล', 2500);
-    document.getElementById('lineProfileBox').style.display = 'none';
-    document.getElementById('customerForm').style.display = 'none';
-    return;
-  }
-  document.getElementById('customerForm').style.display = '';
-  const form = document.getElementById('customerForm');
-  form.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const name = form.name.value.trim();
-    const phone = form.phone.value.trim();
-    const address = form.address.value.trim();
-    const lineUserId = sessionStorage.getItem('lineUserId') || '';
-    if (!name || !phone || !address) {
-      showToast('กรุณากรอกข้อมูลให้ครบถ้วน');
-      return;
-    }
-    // Basic phone validation (Thai mobile)
-    if (!/^\d{9,12}$/.test(phone)) {
-      showToast('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง');
-      return;
-    }
-    // Save to sessionStorage
-    const customerInfo = { name, phone, address, lineUserId };
-    sessionStorage.setItem('customerInfo', JSON.stringify(customerInfo));
-    showToast('บันทึกข้อมูลสำเร็จ', 1200);
-    setTimeout(gotoSummary, 1200);
-  });
-});
-
-// --- ดึงที่อยู่จากแผนที่ (Geolocation + Reverse Geocode) ---
-const getLocationBtn = document.getElementById('getLocationBtn');
-const addressInput = document.getElementById('addressInput');
-const mapPreview = document.getElementById('mapPreview');
-
-getLocationBtn.onclick = function(e) {
-  e.preventDefault();
-  if (!navigator.geolocation) {
-    showToast('เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง');
-    return;
-  }
-  getLocationBtn.textContent = 'กำลังค้นหาตำแหน่ง...';
-  getLocationBtn.disabled = true;
-  navigator.geolocation.getCurrentPosition(async pos => {
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
-    // แสดงแผนที่ preview
-    mapPreview.innerHTML = `<img src="https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=17&size=350x180&markers=color:red%7C${lat},${lng}&key=AIzaSyA-EXAMPLE-KEY" style="width:100%;max-width:350px;border-radius:10px;box-shadow:0 2px 8px #ffe082;">`;
-    // ดึงที่อยู่จาก Google Maps Geocoding API
-    try {
-      const res = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=AIzaSyA-EXAMPLE-KEY&language=th`);
-      const data = await res.json();
-      if (data.results && data.results[0]) {
-        addressInput.value = data.results[0].formatted_address;
-        showToast('ดึงที่อยู่สำเร็จ', 1800);
-      } else {
-        addressInput.value = '';
-        showToast('ไม่พบที่อยู่', 1800);
-      }
-    } catch {
-      addressInput.value = '';
-      showToast('ไม่สามารถดึงที่อยู่ได้', 1800);
-    }
-    getLocationBtn.textContent = '📍 ใช้ตำแหน่งจากแผนที่';
-    getLocationBtn.disabled = false;
-  }, err => {
-    showToast('ไม่สามารถระบุตำแหน่งได้');
-    getLocationBtn.textContent = '📍 ใช้ตำแหน่งจากแผนที่';
-    getLocationBtn.disabled = false;
-  });
-};
-
-// --- Real-time validation เบอร์โทร/ที่อยู่ซ้ำ ---
-const phoneInput = document.getElementById('phoneInput');
-phoneInput.addEventListener('input', function() {
-  const val = phoneInput.value.trim();
-  if (!/^\d{9,12}$/.test(val)) {
-    phoneInput.style.borderColor = '#d32f2f';
-  } else {
-    phoneInput.style.borderColor = '#FFA726';
-    // ตรวจสอบซ้ำใน localStorage
-    const orders = JSON.parse(localStorage.getItem('adminOrders')||'[]');
-    if (orders.some(o => o.phone === val)) {
-      showToast('เบอร์นี้เคยสั่งซื้อแล้ว', 1800);
-      phoneInput.style.borderColor = '#FFD700';
-    }
-  }
-});
-addressInput.addEventListener('blur', function() {
-  const val = addressInput.value.trim();
-  if (val.length < 8) {
-    addressInput.style.borderColor = '#d32f2f';
-    showToast('กรุณากรอกที่อยู่ให้ครบถ้วน', 1800);
-  } else {
-    addressInput.style.borderColor = '#FFA726';
-  }
-});
 
 // --- Loading/animation ขณะเปลี่ยนหน้า ---
 function showPageLoading() {
@@ -174,8 +114,93 @@ function hidePageLoading() {
   const loading = document.getElementById('pageLoading');
   if (loading) loading.style.display = 'none';
 }
-// ใช้ loading ตอนเปลี่ยนหน้า
 function gotoSummary() {
   showPageLoading();
   setTimeout(()=>{ window.location.href = 'summary.html'; }, 600);
+}
+
+// --- ตรวจสอบ session LINE และบังคับ login อัตโนมัติ ---
+document.addEventListener('DOMContentLoaded', () => {
+  liffInitAndCheckLogin();
+  // --- ฟอร์ม submit ---
+  if (customerForm) {
+    customerForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const name = customerForm.name.value.trim();
+      const phone = customerForm.phone.value.trim();
+      const address = customerForm.address.value.trim();
+      const lineUserId = sessionStorage.getItem('lineUserId') || '';
+      if (!name || !phone || !address) {
+        showToast('กรุณากรอกข้อมูลให้ครบถ้วน');
+        return;
+      }
+      if (!/^\d{9,12}$/.test(phone)) {
+        showToast('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง');
+        return;
+      }
+      // Save to sessionStorage
+      const customerInfo = { name, phone, address, lineUserId };
+      sessionStorage.setItem('customerInfo', JSON.stringify(customerInfo));
+      showToast('บันทึกข้อมูลสำเร็จ', 1200);
+      setTimeout(gotoSummary, 1200);
+    });
+  }
+});
+
+// --- ดึงที่อยู่จากแผนที่ (Geolocation) (ไม่มี API Key จะใส่ lat/lng ให้) ---
+const getLocationBtn = document.getElementById('getLocationBtn');
+const addressInput = document.getElementById('addressInput');
+const mapPreview = document.getElementById('mapPreview');
+if (getLocationBtn) {
+  getLocationBtn.onclick = function(e) {
+    e.preventDefault();
+    if (!navigator.geolocation) {
+      showToast('เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง');
+      return;
+    }
+    getLocationBtn.textContent = 'กำลังค้นหาตำแหน่ง...';
+    getLocationBtn.disabled = true;
+    navigator.geolocation.getCurrentPosition(pos => {
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      mapPreview.innerHTML = `<div style='color:#FFA726;'>พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>`;
+      addressInput.value = `พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+      showToast('คัดลอกพิกัดเรียบร้อย', 1800);
+      getLocationBtn.textContent = '📍 ใช้ตำแหน่งจากแผนที่';
+      getLocationBtn.disabled = false;
+    }, err => {
+      showToast('ไม่สามารถระบุตำแหน่งได้');
+      getLocationBtn.textContent = '📍 ใช้ตำแหน่งจากแผนที่';
+      getLocationBtn.disabled = false;
+    });
+  };
+}
+
+// --- Real-time validation เบอร์โทร/ที่อยู่ซ้ำ ---
+const phoneInput = document.getElementById('phoneInput');
+if (phoneInput) {
+  phoneInput.addEventListener('input', function() {
+    const val = phoneInput.value.trim();
+    if (!/^\d{9,12}$/.test(val)) {
+      phoneInput.style.borderColor = '#d32f2f';
+    } else {
+      phoneInput.style.borderColor = '#FFA726';
+      const orders = JSON.parse(localStorage.getItem('adminOrders')||'[]');
+      if (orders.some(o => o.phone === val)) {
+        showToast('เบอร์นี้เคยสั่งซื้อแล้ว', 1800);
+        phoneInput.style.borderColor = '#FFD700';
+      }
+    }
+  });
+}
+if (addressInput) {
+  addressInput.addEventListener('blur', function() {
+    const val = addressInput.value.trim();
+    if (val.length < 8) {
+      addressInput.style.borderColor = '#d32f2f';
+      showToast('กรุณากรอกที่อยู่ให้ครบถ้วน', 1800);
+    } else {
+      addressInput.style.borderColor = '#FFA726';
+    }
+  });
 }
