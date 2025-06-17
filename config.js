@@ -1,6 +1,5 @@
 // config.js - Shared configuration for LIFF and other constants
-// Make sure to set liffId from your LINE Developer Console
-export const config = {
+window.config = {
   liffId: '2006986568-yjrOkKqm', // FIXME: Replace with your real LIFF ID from LINE Developer Console
   debug: true, // เปิด/ปิด logging
   minOrder: {
@@ -25,19 +24,16 @@ export const config = {
     }
   ]
 };
-
-// Helper: get safe redirectUri for LIFF login
-export function getRedirectUri() {
-  // Use current URL without hash or search
-  return window.location.origin + window.location.pathname;
-}
-
-// Robust logger
-export function log(type, message, data = null) {
-  if (typeof config !== 'undefined' && config.debug) {
+window.log = function(type, message, data = null) {
+  if (window.config && window.config.debug) {
     console.log(`[${type}] ${message}`, data || '');
   }
-}
+};
+// Helper: get safe redirectUri for LIFF login
+window.getRedirectUri = function() {
+  return window.location.origin + window.location.pathname;
+};
 
-// Fallback for missing config.js (if imported in try/catch)
-export default config;
+window.addEventListener('error', function(e) {
+  console.error('Global error:', e.error || e.message || e);
+});

@@ -279,16 +279,14 @@
   <script src="summary.js" defer></script>
   <!-- html2pdf.js CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-  <!-- เชื่อมต่อ summary.js -->
+  <!-- เชื่อมต่อ LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script type="module">
-    import { liffId } from './config.js';
+  <script>
     window.addEventListener('DOMContentLoaded', async () => {
       try {
         await liff.init({ 
-          liffId,
+          liffId: window.config.liffId,
           withLoginOnExternalBrowser: true,
-          // เพิ่ม scope สำหรับขออีเมล
           scope: ["profile", "openid", "email"]
         });
         if (!liff.isLoggedIn()) {
@@ -303,11 +301,7 @@
           window.location.href = 'form.html';
           return;
         }
-        // โหลด summary.js หลังผ่าน LIFF และ session check
-        const script = document.createElement('script');
-        script.type = 'module';
-        script.src = 'summary.js';
-        document.body.appendChild(script);
+        // summary.js will run after defer, no need to load as module
       } catch (err) {
         alert('เกิดข้อผิดพลาด: ' + (err.message || err));
       }

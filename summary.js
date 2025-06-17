@@ -1,5 +1,3 @@
-import { config, log } from './config.js';
-
 // summary.js: รองรับการใช้งานใน LIFF (LINE Front-end Framework)
 // - แสดงข้อมูลสรุปคำสั่งซื้อหลังผ่าน LIFF และ session check จาก summary.html
 

@@ -1,4 +1,5 @@
-import { config, log } from './config.js'; // นำเข้า config และ log
+// Removed import { config, log } from './config.js'; // นำเข้า config และ log
+// Use window.config and window.log throughout this file
 
 // form.js - Step 2: Customer Info Form
 const lineProfileBox = document.getElementById('lineProfileBox');
@@ -6,7 +7,7 @@ const customerForm = document.getElementById('customerForm');
 
 async function getLineProfile() {
   try {
-    await liff.init({ liffId: config.liffId });
+    await liff.init({ liffId: window.config.liffId });
     if (!liff.isLoggedIn()) {
       liff.login({ redirectUri: window.location.href });
       return null;
@@ -14,7 +15,7 @@ async function getLineProfile() {
     const profile = await liff.getProfile();
     return profile;
   } catch (err) {
-    log('ERROR', 'LIFF getProfile failed', err);
+    window.log('ERROR', 'LIFF getProfile failed', err);
     showToast('เกิดข้อผิดพลาดในการดึงข้อมูล LINE Profile');
     return null;
   }
@@ -23,7 +24,7 @@ async function getLineProfile() {
 async function showProfile() {
   const profile = await getLineProfile();
   if (profile) {
-    log('INFO', 'LINE profile', profile);
+    window.log('INFO', 'LINE profile', profile);
     lineProfileBox.innerHTML = `
       <img src="${profile.pictureUrl}" style="width:64px;height:64px;border-radius:50%;box-shadow:0 2px 8px #ffe082;">
       <div style="font-weight:700;margin-top:0.5em;">${profile.displayName}</div>
@@ -137,7 +138,7 @@ async function reverseGeocode(lat, lng) {
     const data = await res.json();
     return data.display_name || `${lat},${lng}`;
   } catch (e) {
-    log('ERROR', 'Reverse geocoding failed', e);
+    window.log('ERROR', 'Reverse geocoding failed', e);
     showToast('ไม่สามารถดึงข้อมูลที่อยู่จากแผนที่ได้');
     return `${lat},${lng}`;
   }
@@ -164,7 +165,7 @@ if (getLocationBtn) {
       getLocationBtn.disabled = false;
       hidePageLoading();
     }, err => {
-      log('ERROR', 'Geolocation failed', err);
+      window.log('ERROR', 'Geolocation failed', err);
       showToast('ไม่สามารถระบุตำแหน่งได้');
       getLocationBtn.textContent = '📍 ใช้ตำแหน่งจากแผนที่';
       getLocationBtn.disabled = false;
