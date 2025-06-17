@@ -290,10 +290,9 @@ input:focus, textarea:focus {
 /* --- Misc --- */
 .cart-notice {
   color: var(--danger);
-  font-size: 1em;
-  margin-top: 1em;
-  text-align: center;
-}
+font-size: 1em;
+margin-top: 1em;
+text-align: center;
 
 #mapPreview img {
   max-width: 98vw;
