@@ -94,8 +94,20 @@ function gotoSummary() {
 const getLocationBtn = document.getElementById('getLocationBtn');
 const addressInput = document.getElementById('addressInput');
 const mapPreview = document.getElementById('mapPreview');
+// --- Reverse Geocoding (เทพ) ---
+async function reverseGeocode(lat, lng) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=th`;
+    const res = await fetch(url, { headers: { 'User-Agent': 'LuckyDelivery/1.0' } });
+    const data = await res.json();
+    return data.display_name || `${lat},${lng}`;
+  } catch (e) {
+    return `${lat},${lng}`;
+  }
+}
+
 if (getLocationBtn) {
-  getLocationBtn.onclick = function(e) {
+  getLocationBtn.onclick = async function(e) {
     e.preventDefault();
     if (!navigator.geolocation) {
       showToast('เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง');
@@ -103,18 +115,22 @@ if (getLocationBtn) {
     }
     getLocationBtn.textContent = 'กำลังค้นหาตำแหน่ง...';
     getLocationBtn.disabled = true;
-    navigator.geolocation.getCurrentPosition(pos => {
+    showPageLoading();
+    navigator.geolocation.getCurrentPosition(async pos => {
       const lat = pos.coords.latitude;
       const lng = pos.coords.longitude;
-      mapPreview.innerHTML = `<div style='color:#FFA726;'>พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>`;
-      addressInput.value = `พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-      showToast('คัดลอกพิกัดเรียบร้อย', 1800);
+      let address = await reverseGeocode(lat, lng);
+      mapPreview.innerHTML = `<div style='color:#FFA726;'>${address}</div>`;
+      addressInput.value = address;
+      showToast('คัดลอกที่อยู่จากแผนที่เรียบร้อย', 1800);
       getLocationBtn.textContent = '📍 ใช้ตำแหน่งจากแผนที่';
       getLocationBtn.disabled = false;
+      hidePageLoading();
     }, err => {
       showToast('ไม่สามารถระบุตำแหน่งได้');
       getLocationBtn.textContent = '📍 ใช้ตำแหน่งจากแผนที่';
       getLocationBtn.disabled = false;
+      hidePageLoading();
     });
   };
 }

@@ -1,6 +1,22 @@
 // summary.js: รองรับการใช้งานใน LIFF (LINE Front-end Framework)
 // - แสดงข้อมูลสรุปคำสั่งซื้อหลังผ่าน LIFF และ session check จาก summary.html
 
+function saveUserProfile(profile) {
+  if (!profile || !profile.userId) return;
+  const userProfiles = JSON.parse(localStorage.getItem('userProfiles') || '{}');
+  userProfiles[profile.userId] = {
+    displayName: profile.displayName,
+    pictureUrl: profile.pictureUrl,
+    userId: profile.userId
+  };
+  localStorage.setItem('userProfiles', JSON.stringify(userProfiles));
+}
+
+function getUserProfile(userId) {
+  const userProfiles = JSON.parse(localStorage.getItem('userProfiles') || '{}');
+  return userProfiles[userId] || null;
+}
+
 function renderSummary() {
   const summaryDiv = document.getElementById('orderSummary') || (() => {
     const d = document.createElement('div');
@@ -19,16 +35,21 @@ function renderSummary() {
     summaryDiv.innerHTML = `<div style='color:#d32f2f;text-align:center;font-size:1.15em;margin:2em 0;'>ข้อมูล session ผิดพลาด กรุณากรอกข้อมูลใหม่<br><button onclick=\"window.location.href='form.html'\" style=\"margin-top:1.5em;background:#FFA726;color:#fff;padding:0.8em 2em;border:none;border-radius:8px;font-size:1em;font-weight:600;cursor:pointer;\">กลับไปกรอกข้อมูล</button></div>`;
     return;
   }
-  let html = `<div style=\"text-align:center;margin-bottom:1.2rem;\">
-    <svg width=\"48\" height=\"48\" viewBox=\"0 0 56 56\" fill=\"none\" style=\"vertical-align:middle;\"><circle cx=\"28\" cy=\"28\" r=\"28\" fill=\"#FFA726\"/><path d=\"M17 29.5L25.5 38L39 22\" stroke=\"#fff\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>
-    <div style=\"font-size:1.35rem;font-weight:700;color:#FFA726;margin-top:0.5rem;letter-spacing:0.5px;\">ตรวจสอบข้อมูลก่อนยืนยัน</div>
-  </div>`;
-  // แสดง LINE Profile ถ้ามี
+  // --- เพิ่มการแสดงโปรไฟล์ผู้ใช้ ---
+  let userProfile = getUserProfile(lineUserId);
+  let html = `<div style=\"text-align:center;margin-bottom:1.2rem;\">`;
+  if (userProfile && userProfile.pictureUrl) {
+    html += `<img src='${userProfile.pictureUrl}' alt='profile' style='width:64px;height:64px;border-radius:50%;box-shadow:0 2px 8px #ffe082;margin-bottom:0.5em;'>`;
+  }
+  html += `<svg width=\"48\" height=\"48\" viewBox=\"0 0 56 56\" fill=\"none\" style=\"vertical-align:middle;\"><circle cx=\"28\" cy=\"28\" r=\"28\" fill=\"#FFA726\"/><path d=\"M17 29.5L25.5 38L39 22\" stroke=\"#fff\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>\n    <div style=\"font-size:1.35rem;font-weight:700;color:#FFA726;margin-top:0.5rem;letter-spacing:0.5px;\">ตรวจสอบข้อมูลก่อนยืนยัน</div>\n  </div>`;
   if (lineUserId) {
-    html += `<div style='background:#e0f7fa;border-radius:12px;padding:0.7em 1em;margin-bottom:1em;text-align:left;max-width:420px;margin-left:auto;margin-right:auto;'>
-      <b style='color:#00bfff;'>บัญชี LINE:</b> <span style='font-weight:600;'>${lineProfileName}</span><br>
-      <span style='font-size:0.97em;color:#888;'>userId: <span style='font-family:monospace;'>${lineUserId}</span></span>
-    </div>`;
+    html += `<div style='background:#e0f7fa;border-radius:12px;padding:0.7em 1em;margin-bottom:1em;text-align:left;max-width:420px;margin-left:auto;margin-right:auto;'>`;
+    if (userProfile && userProfile.displayName) {
+      html += `<b style='color:#00bfff;'>บัญชี LINE:</b> <span style='font-weight:600;'>${userProfile.displayName}</span><br>`;
+    } else {
+      html += `<b style='color:#00bfff;'>บัญชี LINE:</b> <span style='font-weight:600;'>${lineProfileName}</span><br>`;
+    }
+    html += `<span style='font-size:0.97em;color:#888;'>userId: <span style='font-family:monospace;'>${lineUserId}</span></span></div>`;
   }
   html += `<div style=\"background:#FFF3E0;border-radius:16px;padding:1.2rem 1.2rem 0.7rem 1.2rem;box-shadow:0 2px 8px #ffe0b2;border:1.2px solid #FFA726;max-width:420px;margin:auto;\">
     <div style=\"font-size:1.13rem;font-weight:600;color:#FFA726;margin-bottom:0.7rem;\">ข้อมูลลูกค้า</div>
@@ -87,4 +108,26 @@ function renderSummary() {
   };
 }
 
-document.addEventListener('DOMContentLoaded', renderSummary);
+document.addEventListener('DOMContentLoaded', () => {
+  // --- ดึงโปรไฟล์จาก LIFF (ถ้ามี) แล้วบันทึก ---
+  if (window.liff && typeof liff.getProfile === 'function') {
+    liff.getProfile().then(profile => {
+      saveUserProfile(profile);
+      renderSummary();
+    }).catch(() => renderSummary());
+  } else {
+    renderSummary();
+  }
+});
+
+async function reverseGeocode(lat, lng) {
+  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=th`;
+  const res = await fetch(url, { headers: { 'User-Agent': 'LuckyDelivery/1.0' } });
+  const data = await res.json();
+  return data.display_name || '';
+}
+
+// ตัวอย่างการใช้งาน
+reverseGeocode(6.02458, 101.96366).then(address => {
+  console.log(address); // จะได้ที่อยู่ภาษาไทย
+});
