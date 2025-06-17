@@ -33,27 +33,72 @@
   </style>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
-  document.addEventListener('DOMContentLoaded', async function () {
-    const liffId = 'U56b89fa4ea4169863a687fe972fa3836';
-    try {
-      await liff.init({ liffId });
-      if (!liff.isLoggedIn()) {
+function showLiffErrorPopup(msg, err) {
+  let popup = document.getElementById('liffErrorPopup');
+  if (popup) popup.remove();
+  popup = document.createElement('div');
+  popup.id = 'liffErrorPopup';
+  popup.style = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);z-index:99999;display:flex;align-items:center;justify-content:center;';
+  let detail = '';
+  if (err) {
+    detail = `<div style='color:#b71c1c;font-size:0.98em;margin-top:0.7em;word-break:break-all;'>${err.message || err.toString()}</div>`;
+  }
+  popup.innerHTML = `
+    <div style="background:#fff;padding:2em 2.5em;border-radius:14px;box-shadow:0 2px 16px #d32f2f55;text-align:center;max-width:90vw;">
+      <div style="font-size:1.25em;font-weight:700;color:#d32f2f;margin-bottom:1em;">เกิดข้อผิดพลาดในการโหลด LINE Login</div>
+      <div style="color:#444;margin-bottom:1.5em;">${msg}</div>
+      ${detail}
+      <button onclick="document.getElementById('liffErrorPopup').remove()" style="background:#d32f2f;color:#fff;padding:0.7em 2em;border:none;border-radius:8px;font-size:1em;font-weight:600;cursor:pointer;">ปิด</button>
+    </div>
+  `;
+  document.body.appendChild(popup);
+}
+
+async function initializeLiffSession(liffId) {
+  try {
+    await liff.init({ liffId });
+    if (!liff.isLoggedIn()) {
+      const url = new URL(window.location.href);
+      if (!url.searchParams.has('liff.state')) {
         liff.login({ redirectUri: window.location.href });
+        return null;
       } else {
-        const profile = await liff.getProfile();
-        localStorage.setItem("displayName", profile.displayName);
-        localStorage.setItem("pictureUrl", profile.pictureUrl);
-        const box = document.getElementById('lineProfileBox');
-        if (box) {
-          box.innerHTML = `<img src="${profile.pictureUrl}" style="width:38px;height:38px;border-radius:50%;vertical-align:middle;margin-right:0.5em;box-shadow:0 2px 8px #ffd70099;"> <span style="font-weight:700;">${profile.displayName}</span>`;
-          box.style.display = '';
-        }
+        console.warn('[LIFF] Login failed or cancelled.');
+        showLiffErrorPopup('LINE Login was cancelled or failed.');
+        return null;
       }
-    } catch (err) {
-      alert('เกิดข้อผิดพลาดในการโหลด LINE Login');
-      console.error(err);
     }
-  });
+    let profile, idToken;
+    try {
+      profile = await liff.getProfile();
+      idToken = liff.getIDToken();
+    } catch (profileErr) {
+      console.error('[LIFF] Failed to get profile:', profileErr);
+      showLiffErrorPopup('Failed to fetch LINE profile.', profileErr);
+      return null;
+    }
+    const userData = {
+      displayName: profile.displayName,
+      pictureUrl: profile.pictureUrl,
+      lineUserId: profile.userId,
+      idToken: idToken
+    };
+    for (const [k, v] of Object.entries(userData)) {
+      localStorage.setItem(k, v);
+      sessionStorage.setItem(k, v);
+    }
+    console.log('[LIFF] User loaded:', userData);
+    return userData;
+  } catch (err) {
+    console.error('[LIFF] Initialization error:', err);
+    showLiffErrorPopup('LIFF initialization failed.', err);
+    return null;
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initializeLiffSession('2006986568-yjrOkKqm');
+});
   </script>
 </head>
 <body>
