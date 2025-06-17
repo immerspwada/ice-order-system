@@ -22,6 +22,26 @@ function renderLiffCloseBtn() {
   }
 }
 
+// --- Sync lineUserId จาก localStorage ถ้า sessionStorage ไม่มี ---
+(function syncLineUserId() {
+  if (!sessionStorage.getItem('lineUserId') && localStorage.getItem('lineUserId')) {
+    sessionStorage.setItem('lineUserId', localStorage.getItem('lineUserId'));
+  }
+})();
+
+// --- Sync ข้อมูลสำคัญจาก localStorage กลับเข้า sessionStorage ถ้าไม่มี ---
+(function syncSessionFromLocal() {
+  if (!sessionStorage.getItem('lineUserId') && localStorage.getItem('lineUserId')) {
+    sessionStorage.setItem('lineUserId', localStorage.getItem('lineUserId'));
+  }
+  if (!sessionStorage.getItem('customerInfo') && localStorage.getItem('customerInfo')) {
+    sessionStorage.setItem('customerInfo', localStorage.getItem('customerInfo'));
+  }
+  if (!sessionStorage.getItem('orderProducts') && localStorage.getItem('orderProducts')) {
+    sessionStorage.setItem('orderProducts', localStorage.getItem('orderProducts'));
+  }
+})();
+
 // --- ตรวจสอบ sessionStorage ก่อนแสดง summary ---
 document.addEventListener('DOMContentLoaded', () => {
   const customerInfo = JSON.parse(sessionStorage.getItem('customerInfo') || '{}');
@@ -214,6 +234,33 @@ async function displayUserNameFromLINE() {
   }
 }
 
+// --- ป้องกัน redirect loop: ถ้า login แล้วแต่ sessionStorage ไม่มีข้อมูล ให้ดึงจาก localStorage และ liff profile ---
+(async function ensureSessionData() {
+  const liffId = 'U56b89fa4ea4169863a687fe972fa3836';
+  if (typeof liff !== 'undefined') {
+    try {
+      await liff.init({ liffId });
+      if (liff.isLoggedIn()) {
+        // sync profile จาก liff
+        const profile = await liff.getProfile();
+        localStorage.setItem('displayName', profile.displayName);
+        localStorage.setItem('pictureUrl', profile.pictureUrl);
+        localStorage.setItem('lineUserId', profile.userId);
+        localStorage.setItem('lineAccessToken', liff.getAccessToken());
+        sessionStorage.setItem('lineUserId', profile.userId);
+        sessionStorage.setItem('lineAccessToken', liff.getAccessToken());
+        // sync customerInfo จาก localStorage ถ้าไม่มีใน sessionStorage
+        if (!sessionStorage.getItem('customerInfo') && localStorage.getItem('customerInfo')) {
+          sessionStorage.setItem('customerInfo', localStorage.getItem('customerInfo'));
+        }
+        if (!sessionStorage.getItem('orderProducts') && localStorage.getItem('orderProducts')) {
+          sessionStorage.setItem('orderProducts', localStorage.getItem('orderProducts'));
+        }
+      }
+    } catch(e) {}
+  }
+})();
+
 // LIFF init (optional, if you want to use liff.sendMessages or closeWindow)
 if (typeof liff !== 'undefined') {
   liff.init({ liffId: 'U56b89fa4ea4169863a687fe972fa3836' }).then(() => {
@@ -223,6 +270,11 @@ if (typeof liff !== 'undefined') {
   });
 } else {
   renderSummary();
+}
+
+const name = localStorage.getItem("displayName");
+if (!name) {
+  liff.login({ redirectUri: window.location.href });
 }
 
 //# sourceMappingURL=summary.js.map

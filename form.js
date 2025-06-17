@@ -35,11 +35,19 @@ document.addEventListener('DOMContentLoaded', () => {
     return;
   }
   liff.init({ liffId }).then(() => {
+    // ป้องกัน redirect loop: login เฉพาะกรณีที่ยังไม่ login จริง และไม่มี liff.state (redirect กลับมาแล้ว)
     if (!liff.isLoggedIn()) {
-      showLoginMessage();
-      liff.login();
-      return;
+      // ถ้า url ไม่มี liff.state ให้ login, ถ้ามีแสดงข้อความรอ
+      if (!window.location.search.includes('liff.state')) {
+        showLoginMessage();
+        liff.login();
+        return;
+      } else {
+        showLoginMessage();
+        return;
+      }
     }
+    // login แล้ว
     liff.getProfile().then(profile => {
       if (lineProfileBox) showProfile(profile);
       if (customerForm) customerForm.style.display = '';

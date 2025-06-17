@@ -28,11 +28,12 @@ function renderProducts() {
   PRODUCTS = getProducts();
   const list = document.querySelector('.product-list');
   list.innerHTML = PRODUCTS.map(p => {
-    const inCart = cart[p.id] && cart[p.id] > 0;
-    // set min for water
-    const min = p.min || 0;
+    const isWater = p.id && p.id.startsWith('bottle_');
+    let qty = cart[p.id] || 0;
+    // ถ้าเป็นน้ำและยังไม่ได้เลือก qty ให้แสดง 0
+    if (isWater && !cart.hasOwnProperty(p.id)) qty = 0;
     return `
-      <div class="product-card${inCart ? ' in-cart' : ''}">
+      <div class="product-card${qty > 0 ? ' in-cart' : ''}">
         <div class="product-icon" style="font-size:2.2em;text-align:center;margin-bottom:0.3em;">${p.icon}</div>
         <div class="product-info">
           <div class="product-name">${p.name}</div>
@@ -41,7 +42,7 @@ function renderProducts() {
         </div>
         <div class="product-qty-group" role="group" aria-label="จำนวน ${p.name}">
           <button type="button" class="qty-btn" aria-label="ลดจำนวน" data-target="${p.id}">-</button>
-          <input type="number" name="${p.id}" min="${min}" max="99" value="${cart[p.id]||min||0}" class="product-qty" aria-label="จำนวน ${p.name}">
+          <input type="number" name="${p.id}" min="0" max="99" value="${qty}" class="product-qty" aria-label="จำนวน ${p.name}">
           <button type="button" class="qty-btn" aria-label="เพิ่มจำนวน" data-target="${p.id}">+</button>
         </div>
       </div>
@@ -61,6 +62,23 @@ function updateTotal() {
   }
 }
 
+function showPopup(msg) {
+  let popup = document.getElementById('orderPopup');
+  if (!popup) {
+    popup = document.createElement('div');
+    popup.id = 'orderPopup';
+    popup.style = 'position:fixed;left:0;top:0;width:100vw;height:100vh;background:rgba(0,0,0,0.18);z-index:9999;display:flex;align-items:center;justify-content:center;';
+    popup.innerHTML = `<div style='background:#fffbe7;padding:2em 1.2em;border-radius:16px;max-width:90vw;box-shadow:0 2px 16px #FFA726;min-width:220px;text-align:center;'>
+      <div style='font-weight:700;color:#d32f2f;margin-bottom:1.2em;'>${msg}</div>
+      <button id='closeOrderPopup' style='background:#FFA726;color:#fff;border:none;padding:0.7em 1.5em;border-radius:8px;font-weight:700;'>ปิด</button>
+    </div>`;
+    document.body.appendChild(popup);
+    document.getElementById('closeOrderPopup').onclick = function() {
+      popup.remove();
+    };
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   renderProducts();
   document.querySelector('.product-list').addEventListener('click', e => {
@@ -69,11 +87,21 @@ document.addEventListener('DOMContentLoaded', () => {
       const input = document.querySelector(`.product-qty[name="${id}"]`);
       let val = parseInt(input.value) || 0;
       const prod = PRODUCTS.find(p => p.id === id);
-      const min = prod && prod.min ? prod.min : 0;
-      if (e.target.textContent === '+') val = Math.min(val + 1, 99);
-      if (e.target.textContent === '-') val = Math.max(val - 1, min);
-      input.value = val;
-      cart[id] = val;
+      const isWater = id && id.startsWith('bottle_');
+      if (e.target.textContent === '+') {
+        if (isWater && val === 0) {
+          cart[id] = 10;
+        } else {
+          cart[id] = Math.min((cart[id]||0) + 1, 99);
+        }
+      } else if (e.target.textContent === '-') {
+        if (isWater && val === 10) {
+          cart[id] = 0;
+        } else {
+          cart[id] = Math.max((cart[id]||0) - 1, 0);
+        }
+      }
+      input.value = cart[id];
       updateTotal();
       sessionStorage.setItem('orderProducts', JSON.stringify(cart));
     }
@@ -96,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!cart[k] || cart[k] < min) delete cart[k];
     });
     if (Object.keys(cart).length === 0) {
-      alert('กรุณาเลือกสินค้าอย่างน้อย 1 รายการ (น้ำดื่มขั้นต่ำ 10 แพ็ค)');
+      showPopup('กรุณาเลือกสินค้าอย่างน้อย 1 รายการ (น้ำดื่มขั้นต่ำ 10 แพ็ค)');
       return;
     }
     sessionStorage.setItem('orderProducts', JSON.stringify(cart));

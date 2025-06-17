@@ -6,6 +6,31 @@
   <title>สั่งซื้อ LUCKY - สรุปคำสั่งซื้อ</title>
   <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script>
+  document.addEventListener('DOMContentLoaded', async function () {
+    const liffId = 'U56b89fa4ea4169863a687fe972fa3836';
+    try {
+      await liff.init({ liffId });
+      if (!liff.isLoggedIn()) {
+        liff.login({ redirectUri: window.location.href });
+        return;
+      } else {
+        const profile = await liff.getProfile();
+        localStorage.setItem("displayName", profile.displayName);
+        localStorage.setItem("pictureUrl", profile.pictureUrl);
+        localStorage.setItem("lineUserId", profile.userId);
+        localStorage.setItem("lineAccessToken", liff.getAccessToken());
+        // sync กลับเข้า sessionStorage ด้วย
+        sessionStorage.setItem("lineUserId", profile.userId);
+        sessionStorage.setItem("lineAccessToken", liff.getAccessToken());
+      }
+    } catch (e) {
+      console.error("LIFF init error:", e);
+      alert("เกิดข้อผิดพลาดในการโหลด LINE Login");
+    }
+  });
+  </script>
 </head>
 <body>
   <header>
