@@ -1,8 +1,12 @@
 import { liffId } from './config.js'; // นำเข้า liffId จาก config.js
 
 // form.js - Step 2: Customer Info Form
-const lineProfileBox = document.getElementById('lineProfileBox');
-const customerForm = document.getElementById('customerForm');
+const lineProfileBox = typeof document !== 'undefined'
+  ? document.getElementById('lineProfileBox')
+  : null;
+const customerForm = typeof document !== 'undefined'
+  ? document.getElementById('customerForm')
+  : null;
 
 function showProfile(profile) {
   lineProfileBox.innerHTML = `
@@ -15,38 +19,39 @@ function showProfile(profile) {
   sessionStorage.setItem('lineUserId', profile.userId);
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  if (customerForm) {
-    customerForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      const name = customerForm.name.value.trim();
-      const phone = customerForm.phone.value.trim();
-      const address = customerForm.address.value.trim();
-      const lineUserId = sessionStorage.getItem('lineUserId') || '';
-      if (!name || !phone || !address) {
-        showToast('กรุณากรอกข้อมูลให้ครบถ้วน');
-        return;
-      }
-      if (!/^[0-9]{9,12}$/.test(phone)) {
-        showToast('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง');
-        return;
-      }
-      // Save to sessionStorage
-      const customerInfo = { name, phone, address, lineUserId };
-      sessionStorage.setItem('customerInfo', JSON.stringify(customerInfo));
-      showToast('บันทึกข้อมูลสำเร็จ', 1200);
-      setTimeout(gotoSummary, 1200);
-    });
-  }
+if (typeof document !== 'undefined') {
+  document.addEventListener('DOMContentLoaded', () => {
+    if (customerForm) {
+      customerForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const name = customerForm.name.value.trim();
+        const phone = customerForm.phone.value.trim();
+        const address = customerForm.address.value.trim();
+        const lineUserId = sessionStorage.getItem('lineUserId') || '';
+        if (!name || !phone || !address) {
+          showToast('กรุณากรอกข้อมูลให้ครบถ้วน');
+          return;
+        }
+        if (!/^[0-9]{9,12}$/.test(phone)) {
+          showToast('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง');
+          return;
+        }
+        const customerInfo = { name, phone, address, lineUserId };
+        sessionStorage.setItem('customerInfo', JSON.stringify(customerInfo));
+        showToast('บันทึกข้อมูลสำเร็จ', 1200);
+        setTimeout(gotoSummary, 1200);
+      });
+    }
 
-  // Autofill จาก sessionStorage ถ้ามี
-  const info = JSON.parse(sessionStorage.getItem('customerInfo')||'null');
-  if (info) {
-    document.getElementById('nameInput').value = info.name||'';
-    document.getElementById('phoneInput').value = info.phone||'';
-    document.getElementById('addressInput').value = info.address||'';
-  }
-});
+    // Autofill จาก sessionStorage ถ้ามี
+    const info = JSON.parse(sessionStorage.getItem('customerInfo') || 'null');
+    if (info) {
+      document.getElementById('nameInput').value = info.name || '';
+      document.getElementById('phoneInput').value = info.phone || '';
+      document.getElementById('addressInput').value = info.address || '';
+    }
+  });
+}
 
 // --- Toast Notification ---
 function showToast(msg, ms=2200) {
@@ -91,9 +96,15 @@ function gotoSummary() {
 }
 
 // --- ดึงที่อยู่จากแผนที่ (Geolocation) (ไม่มี API Key จะใส่ lat/lng ให้) ---
-const getLocationBtn = document.getElementById('getLocationBtn');
-const addressInput = document.getElementById('addressInput');
-const mapPreview = document.getElementById('mapPreview');
+const getLocationBtn = typeof document !== 'undefined'
+  ? document.getElementById('getLocationBtn')
+  : null;
+const addressInput = typeof document !== 'undefined'
+  ? document.getElementById('addressInput')
+  : null;
+const mapPreview = typeof document !== 'undefined'
+  ? document.getElementById('mapPreview')
+  : null;
 // --- Reverse Geocoding (เทพ) ---
 async function reverseGeocode(lat, lng) {
   try {
@@ -136,7 +147,9 @@ if (getLocationBtn) {
 }
 
 // --- Real-time validation เบอร์โทร/ที่อยู่ซ้ำ ---
-const phoneInput = document.getElementById('phoneInput');
+const phoneInput = typeof document !== 'undefined'
+  ? document.getElementById('phoneInput')
+  : null;
 if (phoneInput) {
   phoneInput.addEventListener('input', function() {
     const val = phoneInput.value.trim();
@@ -162,4 +175,19 @@ if (addressInput) {
       addressInput.style.borderColor = '#FFA726';
     }
   });
+}
+
+// Utility functions for calculations and validation (shared with tests)
+export function calculateTotal(items = []) {
+  return items.reduce(
+    (sum, item) => sum + (item.price || 0) * (item.qty || 0),
+    0
+  );
+}
+
+export function validateForm({ name, phone } = {}) {
+  if (!name || name.trim() === '') return false;
+  const phoneStr = String(phone || '').trim();
+  if (!/^[0-9]{9,12}$/.test(phoneStr)) return false;
+  return true;
 }

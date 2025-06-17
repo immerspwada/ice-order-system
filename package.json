@@ -1,0 +1,19 @@
+{
+  "name": "ice-order-system",
+  "version": "1.0.0",
+  "description": "- index.html : หน้าเลือกสินค้า - form.html : กรอกข้อมูลลูกค้า - summary.html : สรุปคำสั่งซื้อ/อัปโหลดสลิป - receipt.html : ใบเสร็จ/ดาวน์โหลด PDF - admin.html : จัดการสินค้า/ราคา และดูออเดอร์ย้อนหลัง (เฉพาะเครื่อง) - order.js, form.js, summary.js, receipt.js, admin.js : สคริปต์แต่ละหน้า - style.css : ธีมหลัก",
+  "main": "admin.js",
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js"
+  },
+  "jest": {
+    "testEnvironment": "node"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^30.0.0"
+  }
+}
