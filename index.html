@@ -6,73 +6,59 @@
   <title>เลือกสินค้า - LUCKY Delivery</title>
   <link rel="stylesheet" href="style.css">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script>
-function showLiffErrorPopup(msg, err) {
-  let popup = document.getElementById('liffErrorPopup');
-  if (popup) popup.remove();
-  popup = document.createElement('div');
-  popup.id = 'liffErrorPopup';
-  popup.style = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);z-index:99999;display:flex;align-items:center;justify-content:center;';
-  let detail = '';
-  if (err) {
-    detail = `<div style='color:#b71c1c;font-size:0.98em;margin-top:0.7em;word-break:break-all;'>${err.message || err.toString()}</div>`;
-  }
-  popup.innerHTML = `
-    <div style="background:#fff;padding:2em 2.5em;border-radius:14px;box-shadow:0 2px 16px #d32f2f55;text-align:center;max-width:90vw;">
-      <div style="font-size:1.25em;font-weight:700;color:#d32f2f;margin-bottom:1em;">เกิดข้อผิดพลาดในการโหลด LINE Login</div>
-      <div style="color:#444;margin-bottom:1.5em;">${msg}</div>
-      ${detail}
-      <button onclick="document.getElementById('liffErrorPopup').remove()" style="background:#d32f2f;color:#fff;padding:0.7em 2em;border:none;border-radius:8px;font-size:1em;font-weight:600;cursor:pointer;">ปิด</button>
-    </div>
-  `;
-  document.body.appendChild(popup);
-}
+  <script type="module">
+    import { liffId } from './config.js';
+    window.showLiffErrorPopup = function(msg, err) {
+      let popup = document.getElementById('liffErrorPopup');
+      if (popup) popup.remove();
+      popup = document.createElement('div');
+      popup.id = 'liffErrorPopup';
+      popup.style = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);z-index:99999;display:flex;align-items:center;justify-content:center;';
+      let detail = '';
+      if (err) {
+        detail = `<div style='color:#b71c1c;font-size:0.98em;margin-top:0.7em;word-break:break-all;'>${err.message || err.toString()}</div>`;
+      }
+      popup.innerHTML = `
+        <div style="background:#fff;padding:2em 2.5em;border-radius:14px;box-shadow:0 2px 16px #d32f2f55;text-align:center;max-width:90vw;">
+          <div style="font-size:1.25em;font-weight:700;color:#d32f2f;margin-bottom:1em;">เกิดข้อผิดพลาดในการโหลด LINE Login</div>
+          <div style="color:#444;margin-bottom:1.5em;">${msg}</div>
+          ${detail}
+          <button onclick="document.getElementById('liffErrorPopup').remove()" style="background:#d32f2f;color:#fff;padding:0.7em 2em;border:none;border-radius:8px;font-size:1em;font-weight:600;cursor:pointer;">ปิด</button>
+        </div>
+      `;
+      document.body.appendChild(popup);
+    };
 
-async function initializeLiffSession(liffId) {
-  try {
-    await liff.init({ liffId });
-    if (!liff.isLoggedIn()) {
-      const url = new URL(window.location.href);
-      if (!url.searchParams.has('liff.state')) {
-        liff.login({ redirectUri: window.location.href });
-        return null;
-      } else {
-        console.warn('[LIFF] Login failed or cancelled.');
-        showLiffErrorPopup('LINE Login was cancelled or failed.');
-        return null;
+    async function ensureLiffLogin() {
+      try {
+        await liff.init({ liffId });
+        if (!liff.isLoggedIn()) {
+          // Show login overlay
+          let overlay = document.getElementById('loginOverlay');
+          if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'loginOverlay';
+            overlay.style = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(255,255,255,0.95);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;';
+            overlay.innerHTML = `<div style='font-size:1.3em;font-weight:700;margin-bottom:1.5em;'>กรุณาเข้าสู่ระบบด้วย LINE ก่อนใช้งาน</div><button id='liffLoginBtn' style='background:#FFA726;color:#fff;padding:1em 2.5em;border:none;border-radius:10px;font-size:1.1em;font-weight:700;cursor:pointer;'>เข้าสู่ระบบ LINE</button>`;
+            document.body.appendChild(overlay);
+            document.getElementById('liffLoginBtn').onclick = () => liff.login();
+          }
+          return false;
+        } else {
+          // Remove overlay if exists
+          let overlay = document.getElementById('loginOverlay');
+          if (overlay) overlay.remove();
+          return true;
+        }
+      } catch (err) {
+        window.showLiffErrorPopup('LIFF initialization failed.', err);
+        return false;
       }
     }
-    let profile, idToken;
-    try {
-      profile = await liff.getProfile();
-      idToken = liff.getIDToken();
-    } catch (profileErr) {
-      console.error('[LIFF] Failed to get profile:', profileErr);
-      showLiffErrorPopup('Failed to fetch LINE profile.', profileErr);
-      return null;
-    }
-    const userData = {
-      displayName: profile.displayName,
-      pictureUrl: profile.pictureUrl,
-      lineUserId: profile.userId,
-      idToken: idToken
-    };
-    for (const [k, v] of Object.entries(userData)) {
-      localStorage.setItem(k, v);
-      sessionStorage.setItem(k, v);
-    }
-    console.log('[LIFF] User loaded:', userData);
-    return userData;
-  } catch (err) {
-    console.error('[LIFF] Initialization error:', err);
-    showLiffErrorPopup('LIFF initialization failed.', err);
-    return null;
-  }
-}
 
-document.addEventListener('DOMContentLoaded', () => {
-  initializeLiffSession('2006986568-yjrOkKqm');
-});
+    document.addEventListener('DOMContentLoaded', async () => {
+      await ensureLiffLogin();
+    });
   </script>
 </head>
 <body>
@@ -85,6 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
     </nav>
     <div id="lineProfileBox" style="display:none;position:absolute;top:0.7em;right:1.2em;text-align:right;z-index:20;"></div>
   </header>
+  <div id="status">กำลังโหลด LIFF...</div>
+  <div id="error"></div>
   <main class="container">
     <h1>เลือกสินค้า</h1>
     <section class="product-catalog">

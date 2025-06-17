@@ -1,3 +1,5 @@
+import { liffId } from './config.js'; // นำเข้า liffId จาก config.js
+
 // form.js - Step 2: Customer Info Form
 const lineProfileBox = document.getElementById('lineProfileBox');
 const customerForm = document.getElementById('customerForm');
@@ -13,55 +15,7 @@ function showProfile(profile) {
   sessionStorage.setItem('lineUserId', profile.userId);
 }
 
-function showLoginMessage() {
-  if (customerForm) customerForm.style.display = 'none';
-  if (lineProfileBox) lineProfileBox.style.display = 'none';
-  let msg = document.getElementById('loginMsg');
-  if (!msg) {
-    msg = document.createElement('div');
-    msg.id = 'loginMsg';
-    msg.style = 'text-align:center;margin:2em 0;color:#d32f2f;font-weight:600;';
-    document.body.appendChild(msg);
-  }
-  msg.innerHTML = `กรุณาเข้าสู่ระบบด้วย LINE ก่อนกรอกข้อมูล`;
-  msg.style.display = '';
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-  if (!window.liff) {
-    showLoginMessage();
-    return;
-  }
-  liff.init({ liffId }).then(() => {
-    // ป้องกัน redirect loop: login เฉพาะกรณีที่ยังไม่ login จริง และไม่มี liff.state (redirect กลับมาแล้ว)
-    if (!liff.isLoggedIn()) {
-      // ถ้า url ไม่มี liff.state ให้ login, ถ้ามีแสดงข้อความรอ
-      if (!window.location.search.includes('liff.state')) {
-        showLoginMessage();
-        liff.login();
-        return;
-      } else {
-        showLoginMessage();
-        return;
-      }
-    }
-    // login แล้ว
-    liff.getProfile().then(profile => {
-      if (lineProfileBox) showProfile(profile);
-      if (customerForm) customerForm.style.display = '';
-      let msg = document.getElementById('loginMsg');
-      if (msg) msg.style.display = 'none';
-      // Autofill จาก sessionStorage ถ้ามี
-      const info = JSON.parse(sessionStorage.getItem('customerInfo')||'null');
-      if (info) {
-        document.getElementById('nameInput').value = info.name||'';
-        document.getElementById('phoneInput').value = info.phone||'';
-        document.getElementById('addressInput').value = info.address||'';
-      }
-    });
-  });
-
-  // --- ฟอร์ม submit ---
   if (customerForm) {
     customerForm.addEventListener('submit', function(e) {
       e.preventDefault();
@@ -73,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('กรุณากรอกข้อมูลให้ครบถ้วน');
         return;
       }
-      if (!/^\d{9,12}$/.test(phone)) {
+      if (!/^[0-9]{9,12}$/.test(phone)) {
         showToast('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง');
         return;
       }
@@ -83,6 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
       showToast('บันทึกข้อมูลสำเร็จ', 1200);
       setTimeout(gotoSummary, 1200);
     });
+  }
+
+  // Autofill จาก sessionStorage ถ้ามี
+  const info = JSON.parse(sessionStorage.getItem('customerInfo')||'null');
+  if (info) {
+    document.getElementById('nameInput').value = info.name||'';
+    document.getElementById('phoneInput').value = info.phone||'';
+    document.getElementById('addressInput').value = info.address||'';
   }
 });
 
@@ -127,34 +89,6 @@ function gotoSummary() {
   showPageLoading();
   setTimeout(()=>{ window.location.href = 'summary.html'; }, 600);
 }
-
-// --- ตรวจสอบ session LINE และบังคับ login อัตโนมัติ ---
-document.addEventListener('DOMContentLoaded', () => {
-  liffInitAndCheckLogin();
-  // --- ฟอร์ม submit ---
-  if (customerForm) {
-    customerForm.addEventListener('submit', function(e) {
-      e.preventDefault();
-      const name = customerForm.name.value.trim();
-      const phone = customerForm.phone.value.trim();
-      const address = customerForm.address.value.trim();
-      const lineUserId = sessionStorage.getItem('lineUserId') || '';
-      if (!name || !phone || !address) {
-        showToast('กรุณากรอกข้อมูลให้ครบถ้วน');
-        return;
-      }
-      if (!/^\d{9,12}$/.test(phone)) {
-        showToast('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง');
-        return;
-      }
-      // Save to sessionStorage
-      const customerInfo = { name, phone, address, lineUserId };
-      sessionStorage.setItem('customerInfo', JSON.stringify(customerInfo));
-      showToast('บันทึกข้อมูลสำเร็จ', 1200);
-      setTimeout(gotoSummary, 1200);
-    });
-  }
-});
 
 // --- ดึงที่อยู่จากแผนที่ (Geolocation) (ไม่มี API Key จะใส่ lat/lng ให้) ---
 const getLocationBtn = document.getElementById('getLocationBtn');

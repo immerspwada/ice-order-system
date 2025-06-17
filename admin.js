@@ -439,3 +439,55 @@ document.getElementById('ordersAdmin').addEventListener('click', function(e) {
     showOrderMessagePopup(idx);
   }
 });
+
+// --- Order log (from orders.json) ---
+async function getOrdersFromFile() {
+  try {
+    const res = await fetch('orders.json');
+    if (!res.ok) throw new Error('ไม่พบไฟล์ orders.json');
+    return await res.json();
+  } catch {
+    return [];
+  }
+}
+
+// --- Render orders from file ---
+async function renderOrdersFromFile(search = '') {
+  const orders = await getOrdersFromFile();
+  const div = document.getElementById('ordersAdmin');
+  let filtered = orders;
+  if (search) {
+    const s = search.toLowerCase();
+    filtered = orders.filter(o =>
+      (o.customer?.name||'').toLowerCase().includes(s) ||
+      (o.customer?.phone||'').toLowerCase().includes(s)
+    );
+  }
+  if (!filtered.length) {
+    div.innerHTML = '<div style="color:#d32f2f;text-align:center;">ไม่พบออเดอร์</div>';
+    return;
+  }
+  div.innerHTML = `<table style="width:100%;max-width:900px;margin:auto;border-collapse:collapse;">
+    <tr style="background:#fffbe7;font-weight:700;color:#BFA600;"><th>วัน-เวลา</th><th>ชื่อ</th><th>โทร</th><th>ที่อยู่</th><th>สินค้า</th><th>ยอดรวม</th></tr>
+    ${filtered.map((o,i)=>`
+      <tr>
+        <td style="font-size:0.98em;">${o.datetime||'-'}</td>
+        <td>${o.customer?.name||'-'}</td>
+        <td>${o.customer?.phone||'-'}</td>
+        <td>${o.customer?.address||'-'}</td>
+        <td style="font-size:0.98em;">${(o.items||[]).map(p=>`${p.name} x${p.qty}`).join('<br>')}</td>
+        <td>฿${o.total||0}</td>
+      </tr>
+    `).join('')}
+  </table>`;
+}
+
+// --- เพิ่มปุ่มเรียกดูประวัติออเดอร์จากไฟล์ ---
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.createElement('button');
+  btn.textContent = 'ดูประวัติออเดอร์จากไฟล์';
+  btn.style = 'margin:1em 0;background:#FFA726;color:#fff;border:none;padding:0.7em 1.5em;border-radius:8px;font-weight:700;';
+  btn.onclick = () => renderOrdersFromFile();
+  const adminDiv = document.getElementById('ordersAdmin');
+  if (adminDiv) adminDiv.parentNode.insertBefore(btn, adminDiv);
+});

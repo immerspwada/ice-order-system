@@ -28,50 +28,8 @@ function showLiffErrorPopup(msg, err) {
   document.body.appendChild(popup);
 }
 
-async function initializeLiffSession(liffId) {
-  try {
-    await liff.init({ liffId });
-    if (!liff.isLoggedIn()) {
-      const url = new URL(window.location.href);
-      if (!url.searchParams.has('liff.state')) {
-        liff.login({ redirectUri: window.location.href });
-        return null;
-      } else {
-        console.warn('[LIFF] Login failed or cancelled.');
-        showLiffErrorPopup('LINE Login was cancelled or failed.');
-        return null;
-      }
-    }
-    let profile, idToken;
-    try {
-      profile = await liff.getProfile();
-      idToken = liff.getIDToken();
-    } catch (profileErr) {
-      console.error('[LIFF] Failed to get profile:', profileErr);
-      showLiffErrorPopup('Failed to fetch LINE profile.', profileErr);
-      return null;
-    }
-    const userData = {
-      displayName: profile.displayName,
-      pictureUrl: profile.pictureUrl,
-      lineUserId: profile.userId,
-      idToken: idToken
-    };
-    for (const [k, v] of Object.entries(userData)) {
-      localStorage.setItem(k, v);
-      sessionStorage.setItem(k, v);
-    }
-    console.log('[LIFF] User loaded:', userData);
-    return userData;
-  } catch (err) {
-    console.error('[LIFF] Initialization error:', err);
-    showLiffErrorPopup('LIFF initialization failed.', err);
-    return null;
-  }
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-  initializeLiffSession('2006986568-yjrOkKqm');
+  // Removed LIFF initialization logic
 });
   </script>
   <style>
@@ -135,6 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
       <button type="submit" class="btn-main">ถัดไป</button>
     </form>
   </main>
-  <script src="form.js"></script>
+  <script type="module" src="form.js"></script>
 </body>
 </html>

@@ -1,20 +1,5 @@
-// โหลดสินค้าแบบ dynamic จาก localStorage (adminProducts) ถ้ามี
-function getProducts() {
-  return JSON.parse(localStorage.getItem('adminProducts') || 'null') || [
-    { id: 'ice_small', name: 'น้ำแข็งเล็ก', price: 40, icon: '🧊', desc: 'น้ำแข็งก้อนเล็ก เหมาะกับเครื่องดื่ม' },
-    { id: 'ice_crushed', name: 'น้ำแข็งบด', price: 40, icon: '🧊', desc: 'น้ำแข็งบดละเอียด เหมาะกับปั่น' },
-    { id: 'ice_large', name: 'น้ำแข็งใหญ่', price: 40, icon: '🧊', desc: 'น้ำแข็งก้อนใหญ่ อยู่ได้นาน' },
-    { id: 'gas_7kg', name: 'แก๊ส 7 กก.', price: 285, icon: '🛢️', desc: 'ถังแก๊สขนาด 7 กิโลกรัม' },
-    { id: 'gas_15kg', name: 'แก๊ส 15 กก.', price: 490, icon: '🛢️', desc: 'ถังแก๊สขนาด 15 กิโลกรัม' },
-    { id: 'gas_48kg', name: 'แก๊ส 48 กก.', price: 1490, icon: '🛢️', desc: 'ถังแก๊สขนาด 48 กิโลกรัม' },
-    { id: 'bottle_350', name: 'น้ำดื่มขวด 350ml', price: 35, icon: '🧴', desc: 'แพ็ค 12 ขวด', min: 10 },
-    { id: 'bottle_600', name: 'น้ำดื่มขวด 600ml', price: 42, icon: '🧴', desc: 'แพ็ค 12 ขวด', min: 10 },
-    { id: 'bottle_820', name: 'น้ำดื่มขวด 820ml', price: 36, icon: '🧴', desc: 'แพ็ค 6 ขวด', min: 10 }
-  ];
-}
-
-// PRODUCTS จะอัปเดตทุกครั้งที่ renderProducts
-let PRODUCTS = getProducts();
+// โหลดสินค้าแบบ dynamic จากไฟล์ products.json
+let PRODUCTS = [];
 
 // แก้ไข: กำหนด cart ให้โหลดจาก sessionStorage หรือเป็น object ว่าง
 let cart = {};
@@ -24,13 +9,29 @@ try {
   cart = {};
 }
 
+// โหลดสินค้าและ render เมื่อ DOM พร้อม
+function loadProductsAndRender() {
+  fetch('products.json')
+    .then(res => res.json())
+    .then(data => {
+      PRODUCTS = data;
+      renderProducts();
+      updateTotal();
+    })
+    .catch(() => {
+      // fallback ถ้าโหลดไม่ได้
+      PRODUCTS = [];
+      renderProducts();
+      updateTotal();
+    });
+}
+
 function renderProducts() {
-  PRODUCTS = getProducts();
   const list = document.querySelector('.product-list');
+  if (!list) return;
   list.innerHTML = PRODUCTS.map(p => {
     const isWater = p.id && p.id.startsWith('bottle_');
     let qty = cart[p.id] || 0;
-    // ถ้าเป็นน้ำและยังไม่ได้เลือก qty ให้แสดง 0
     if (isWater && !cart.hasOwnProperty(p.id)) qty = 0;
     return `
       <div class="product-card${qty > 0 ? ' in-cart' : ''}">
@@ -48,6 +49,16 @@ function renderProducts() {
       </div>
     `;
   }).join('');
+  // รีผูก event หลัง render
+  document.querySelectorAll('.product-qty').forEach(input => {
+    input.addEventListener('input', function() {
+      let val = Math.max(parseInt(this.min)||0, Math.min(99, parseInt(this.value) || 0));
+      this.value = val;
+      cart[this.name] = val;
+      updateTotal();
+      sessionStorage.setItem('orderProducts', JSON.stringify(cart));
+    });
+  });
 }
 
 function updateTotal() {
@@ -80,7 +91,7 @@ function showPopup(msg) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderProducts();
+  loadProductsAndRender();
   document.querySelector('.product-list').addEventListener('click', e => {
     if (e.target.classList.contains('qty-btn')) {
       const id = e.target.dataset.target;
@@ -106,15 +117,6 @@ document.addEventListener('DOMContentLoaded', () => {
       sessionStorage.setItem('orderProducts', JSON.stringify(cart));
     }
   });
-  document.querySelectorAll('.product-qty').forEach(input => {
-    input.addEventListener('input', function() {
-      let val = Math.max(parseInt(this.min)||0, Math.min(99, parseInt(this.value) || 0));
-      this.value = val;
-      cart[this.name] = val;
-      updateTotal();
-      sessionStorage.setItem('orderProducts', JSON.stringify(cart));
-    });
-  });
   document.getElementById('productForm').addEventListener('submit', e => {
     e.preventDefault();
     // Remove zero qty and check min for water
@@ -130,5 +132,4 @@ document.addEventListener('DOMContentLoaded', () => {
     sessionStorage.setItem('orderProducts', JSON.stringify(cart));
     window.location.href = 'form.html';
   });
-  updateTotal();
 });
