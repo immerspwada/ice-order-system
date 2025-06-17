@@ -46,6 +46,22 @@ function getLastAddress() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Autofill from query string if present
+  const params = new URLSearchParams(window.location.search);
+  const nameQ = params.get('name');
+  const phoneQ = params.get('phone');
+  const addressQ = params.get('address');
+  if (nameQ || phoneQ || addressQ) {
+    if (!nameQ || !phoneQ || !addressQ) {
+      // If any required field is missing, go back to previous page
+      window.location.href = document.referrer || 'index.html';
+      return;
+    }
+    document.getElementById('nameInput').value = nameQ;
+    document.getElementById('phoneInput').value = phoneQ;
+    document.getElementById('addressInput').value = addressQ;
+  }
+
   await showProfile(); // เรียกใช้ฟังก์ชัน showProfile
   if (customerForm) {
     customerForm.addEventListener('submit', function(e) {
