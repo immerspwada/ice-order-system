@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin - LUCKY Delivery</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="preload" href="style.css" as="style">
+  <link rel="preload" href="admin.js" as="script">
+  <link rel="preconnect" href="https://static.line-scdn.net" crossorigin>
   <style>
     /* Loading Spinner Overlay */
     #globalLoading {
@@ -24,12 +27,11 @@
       animation: spin 1s linear infinite;
     }
     @keyframes spin { 100% { transform: rotate(360deg); } }
-    @media (max-width: 600px) {
-      h1, h2, h3 { font-size: 1.1em; }
-      .container { padding: 0.5em 0.1em; }
-      section { margin-bottom: 1.2em; }
-      table { font-size: 0.98em; }
-    }
+    /* Responsive styles for mobile */
+    h1, h2, h3 { font-size: 1.1em; }
+    .container { padding: 0.5em 0.1em; }
+    section { margin-bottom: 1.2em; }
+    table { font-size: 0.98em; }
   </style>
 </head>
 <body>
@@ -67,6 +69,19 @@
     </section>
     <hr style="margin:2em 0;">
     <section>
+      <h2>จัดการคูปองส่วนลด</h2>
+      <div id="couponAdmin"></div>
+      <button id="addCouponBtn" class="btn-main" style="background:#ffe082;color:#BFA600;">+ เพิ่มคูปองใหม่</button>
+      <button id="saveCouponsBtn" class="btn-main">บันทึกคูปอง</button>
+    </section>
+    <hr style="margin:2em 0;">
+    <section>
+      <h2>จัดการสินค้าคงคลัง</h2>
+      <div id="stockAdmin"></div>
+      <button id="saveStockBtn" class="btn-main">บันทึกสต็อกสินค้า</button>
+    </section>
+    <hr style="margin:2em 0;">
+    <section>
       <h2>รายการสั่งซื้อ</h2>
       <input id="orderSearch" type="text" placeholder="ค้นหาออเดอร์ (ชื่อ, เบอร์, สถานะ)" style="width:100%;max-width:320px;margin-bottom:1em;padding:0.7em 1em;border-radius:8px;border:1.2px solid #FFA726;">
       <div id="ordersAdmin"></div>
@@ -75,7 +90,7 @@
    <footer>
     LUCKY Delivery &copy; 2024
   </footer>
-  <script src="admin.js"></script>
+  <script src="admin.js" defer></script>
   <script>
     renderAdminDashboard();
     // Responsive: ปรับขนาดตารางและ section อัตโนมัติด้วย CSS แล้ว
@@ -88,4 +103,5 @@
     };
   </script>
 </body>
+</html>
 </html>

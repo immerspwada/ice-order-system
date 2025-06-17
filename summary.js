@@ -109,6 +109,7 @@ function validateOrderProducts(products) {
   Object.entries(products).forEach(([id, p]) => {
     if (id.startsWith('bottle_')) totalWater += p.qty;
     if (id.startsWith('ice_')) totalIce += p.qty;
+    // เพิ่มการตรวจสอบว่า p เป็น object และมี qty
   });
 
   if (totalWater > 0 && totalWater < config.minOrder.water) {
@@ -117,6 +118,19 @@ function validateOrderProducts(products) {
   if (totalIce > 0 && totalIce < config.minOrder.ice) {
     throw new Error(`น้ำแข็งต้องสั่งขั้นต่ำ ${config.minOrder.ice} ถุง`);
   }
+}
+
+// เพิ่มฟังก์ชันตรวจสอบคูปองส่วนลด
+function validateCoupon(couponCode, total) {
+  const coupons = JSON.parse(localStorage.getItem('coupons') || '[]');
+  const coupon = coupons.find(c => c.code === couponCode);
+  if (!coupon) {
+    throw new Error('คูปองส่วนลดไม่ถูกต้อง');
+  }
+  if (total < coupon.minOrder) {
+    throw new Error(`ต้องมียอดสั่งซื้อขั้นต่ำ ${coupon.minOrder} บาท`);
+  }
+  return coupon;
 }
 
 // ปรับปรุงฟังก์ชัน renderSummary
@@ -205,8 +219,22 @@ function renderSummary() {
     html += '</ul>';
 
     const shipping = calculateShipping(total, customerInfo.address);
+    let discount = 0;
+    try {
+      const couponCode = prompt('กรุณากรอกรหัสคูปองส่วนลด (ถ้ามี):', '');
+      if (couponCode) {
+        const coupon = validateCoupon(couponCode, total);
+        discount = coupon.discount;
+        total -= discount;
+      }
+    } catch (e) {
+      showToast(e.message, 4000);
+    }
 
-    html += `<div style='margin-top:1.2rem;font-size:1.15rem;font-weight:700;color:#FFA726;text-align:right;'>รวมทั้งสิ้น: <span style='color:#d32f2f;'>฿${(total + shipping).toLocaleString()}</span> บาท</div>`;
+    html += `<div style='margin-top:1.2rem;font-size:1.15rem;font-weight:700;color:#FFA726;text-align:right;'>
+      ยอดรวม: <span style='color:#d32f2f;'>฿${total.toLocaleString()}</span> บาท
+      ${discount > 0 ? `<span style='color:#43a047;'> (ส่วนลด ${discount} บาท)</span>` : ''}
+    </div>`;
     html += '</div>';
     html += `<div style=\"background:#FFE0B2;border-radius:14px;padding:1.2rem 1rem 1.2rem 1rem;box-shadow:0 1px 4px #ffe0b2;margin:1.5rem 0 1rem 0;text-align:center;max-width:420px;margin-left:auto;margin-right:auto;\">\n    <label style=\"font-weight:600;color:#FFA726;\">อัปโหลดสลิปโอนเงิน (ถ้ามี):<br>
         <input type=\"file\" id=\"slipInput\" accept=\"image/*\" style=\"margin-top:0.5rem;\">
@@ -258,8 +286,9 @@ function renderSummary() {
         spinner.style.display = 'inline-block';
       }
       // Merge all data and go to receipt
-      const orderData = { ...customerInfo, products: orderProducts, slip: slipDataUrl, total: total + shipping, shipping: shipping };
+      const orderData = { ...customerInfo, products: orderProducts, slip: slipDataUrl, total: total + shipping - discount, shipping: shipping, discount: discount };
       sessionStorage.setItem('orderData', JSON.stringify(orderData));
+      sessionStorage.setItem('PRODUCTS', JSON.stringify(PRODUCTS));
       try {
         const orders = JSON.parse(localStorage.getItem('adminOrders') || '[]');
         orderData.datetime = new Date().toLocaleString('th-TH', { hour12: false });
@@ -325,17 +354,17 @@ async function initializeLiff() {
       throw new Error('LIFF SDK not loaded');
     }
 
-    await liff.init({ liffId: config.liffId });
+    await liff.init({ liffId: config.liffId, withLoginOnExternalBrowser: true, scope: ["profile", "email"] });
     
     if (!liff.isLoggedIn()) {
       log('INFO', 'User not logged in');
-      liff.login();
+      liff.login({ redirectUri: window.location.href });
       return false;
     }
 
     if (!liff.isInClient()) {
       log('WARN', 'Not in LINE client');
-      alert('กรุณาเปิดผ่านแอป LINE เท่านั้น');
+      showToast('กรุณาเปิดผ่านแอป LINE เท่านั้น');
       return false;
     }
 
@@ -344,6 +373,7 @@ async function initializeLiff() {
     
     saveUserProfile(profile);
     sessionStorage.setItem('lineUserId', profile.userId);
+    sessionStorage.setItem('lineEmail', profile.email || '');
     
     return true;
 

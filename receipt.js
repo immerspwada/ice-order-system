@@ -3,6 +3,14 @@ const receiptDiv = document.getElementById('receipt');
 const orderData = JSON.parse(sessionStorage.getItem('orderData') || '{}');
 const slipDataUrl = sessionStorage.getItem('slipDataUrl') || '';
 
+// ดึงข้อมูลสินค้าจาก sessionStorage
+let PRODUCTS = [];
+try {
+  PRODUCTS = JSON.parse(sessionStorage.getItem('PRODUCTS')) || [];
+} catch (e) {
+  console.error("Error parsing PRODUCTS from sessionStorage", e);
+}
+
 function escapeHtml(text) {
   const div = document.createElement('div');
   div.textContent = text;
@@ -38,39 +46,27 @@ function renderReceipt() {
       <div style="font-size:1.18rem;font-weight:700;color:#BFA600;margin-bottom:0.8rem;letter-spacing:0.5px;text-align:left;">รายการสินค้า</div>
       <ul style="margin:0 0 0 18px;padding:0;font-size:1.08rem;list-style:none;">
   `;
-  const productNames = {
-    bottle_350: "น้ำดื่มขวด 350ml 🧴",
-    bottle_600: "น้ำดื่มขวด 600ml 🧴",
-    bottle_820: "น้ำดื่มขวด 820ml 🧴",
-    ice_crushed: "น้ำแข็ง บด 🧊",
-    ice_small: "น้ำแข็ง เล็ก 🧊",
-    ice_large: "น้ำแข็ง ใหญ่ 🧊",
-    gas_7kg: "แก๊ส ถัง 7 กก. 🛢️",
-    gas_15kg: "แก๊ส ถัง 15 กก. 🛢️",
-    gas_48kg: "แก๊ส ถัง 48 กก. 🛢️"
-  };
   let total = 0;
   let hasProduct = false;
-  for (let key in productNames) {
-    const qty = parseInt(orderData[key], 10);
-    let price = 0;
-    if (key === 'bottle_350') price = 35;
-    else if (key === 'bottle_600') price = 42;
-    else if (key === 'bottle_820') price = 36;
-    else if (key === 'ice_crushed' || key === 'ice_small' || key === 'ice_large') price = 40;
-    else if (key === 'gas_7kg') price = 285;
-    else if (key === 'gas_15kg') price = 490;
-    else if (key === 'gas_48kg') price = 1490;
-    if (!isNaN(qty) && qty > 0) {
-      html += `<li style='margin-bottom:0.45em;display:flex;align-items:center;justify-content:space-between;background:#fffbe7;border-radius:8px;padding:0.5em 1em;box-shadow:0 1px 4px #fffbe7;'>
-        <span>${productNames[key]}</span>
-        <span style='color:#BFA600;font-weight:700;font-size:1.08em;'>× ${qty}</span>
-        <span style='color:#888;font-size:0.99em;'>(฿${(qty*price).toLocaleString()})</span>
-      </li>`;
-      total += qty * price;
-      hasProduct = true;
+
+  // วนลูปตาม orderProducts ที่ถูกส่งมา
+  for (const productId in orderData.products) {
+    if (orderData.products.hasOwnProperty(productId)) {
+      const product = PRODUCTS.find(p => p.id === productId);
+      const qty = orderData.products[productId].qty;
+
+      if (product && qty > 0) {
+        html += `<li style='margin-bottom:0.45em;display:flex;align-items:center;justify-content:space-between;background:#fffbe7;border-radius:8px;padding:0.5em 1em;box-shadow:0 1px 4px #fffbe7;'>
+          <span>${product.name} ${product.icon}</span>
+          <span style='color:#BFA600;font-weight:700;font-size:1.08em;'>× ${qty}</span>
+          <span style='color:#888;font-size:0.99em;'>(฿${(qty * product.price).toLocaleString()})</span>
+        </li>`;
+        total += qty * product.price;
+        hasProduct = true;
+      }
     }
   }
+
   if (!hasProduct) html += '<li style="color:#d32f2f;text-align:center;padding:0.7em 0;">- ไม่พบรายการสินค้า -</li>';
   html += '</ul>';
   html += `<div style='margin-top:1.5rem;font-size:1.22rem;font-weight:800;color:#BFA600;text-align:right;letter-spacing:0.5px;'>รวมทั้งสิ้น: <span style='color:#d32f2f;'>฿${(typeof total !== 'undefined' ? total : 0).toLocaleString()}</span> บาท</div>`;
@@ -85,3 +81,4 @@ function renderReceipt() {
   </div>`;
   receiptDiv.innerHTML = html;
 }
+

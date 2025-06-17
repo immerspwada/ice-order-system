@@ -1,0 +1,11 @@
+[
+  { "id": "ice_small", "name": "น้ำแข็งเล็ก", "stock": 100 },
+  { "id": "ice_crushed", "name": "น้ำแข็งบด", "stock": 50 },
+  { "id": "ice_large", "name": "น้ำแข็งใหญ่", "stock": 75 },
+  { "id": "gas_7kg", "name": "แก๊ส 7 กก.", "stock": 20 },
+  { "id": "gas_15kg", "name": "แก๊ส 15 กก.", "stock": 15 },
+  { "id": "gas_48kg", "name": "แก๊ส 48 กก.", "stock": 5 },
+  { "id": "bottle_350", "name": "น้ำดื่มขวด 350ml", "stock": 200 },
+  { "id": "bottle_600", "name": "น้ำดื่มขวด 600ml", "stock": 150 },
+  { "id": "bottle_820", "name": "น้ำดื่มขวด 820ml", "stock": 100 }
+]

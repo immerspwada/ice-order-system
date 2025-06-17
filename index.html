@@ -3,11 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LUCKY Delivery</title>
+  <title>LUCKY Delivery - สั่งน้ำแข็ง, แก๊ส, น้ำดื่ม</title>
+  <meta name="description" content="LUCKY Delivery บริการจัดส่งน้ำแข็ง, แก๊ส, น้ำดื่ม รวดเร็วทันใจ">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#FFA726">
   <link rel="apple-touch-icon" href="icon-192x192.png">
   <link rel="stylesheet" href="style.css">
+  <link rel="preload" href="style.css" as="style">
+  <link rel="preload" href="order.js" as="script">
+  <link rel="preconnect" href="https://static.line-scdn.net" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script type="module">
     import { liffId } from './config.js';
@@ -66,7 +73,7 @@
 </head>
 <body>
   <header style="position:relative;">
-    <nav class="stepper">
+    <nav class="stepper" aria-label="ขั้นตอนการสั่งซื้อ">
       <div class="step active"><span>1</span><div>เลือกสินค้า</div></div>
       <div class="step"><span>2</span><div>ข้อมูลลูกค้า</div></div>
       <div class="step"><span>3</span><div>ยืนยัน</div></div>
@@ -76,7 +83,7 @@
   </header>
   <div id="error"></div>
   <main class="container">
-    <h1>เลือกสินค้า</h1>
+    <h1 tabindex="0" class="animate__animated animate__fadeIn">เลือกสินค้า</h1>
     <section class="product-catalog">
       <form id="productForm">
         <div class="product-list" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.2em;">
@@ -84,7 +91,7 @@
         </div>
         <div class="cart-summary">
           <span id="totalPrice">รวม: ฿0</span>
-          <button type="submit" class="btn-main">ถัดไป</button>
+          <button type="submit" class="btn-main animate__animated animate__fadeInUp" aria-label="ไปยังหน้ากรอกข้อมูลลูกค้า">ถัดไป</button>
         </div>
       </form>
       <div id="cartNotice" class="cart-notice"></div>
@@ -93,7 +100,7 @@
   <footer>
     LUCKY Delivery &copy; 2024
   </footer>
-  <script src="order.js"></script>
+  <script src="order.js" defer></script>
   <script>
     // ตรวจสอบว่า order.js ถูกโหลดและ renderProducts ถูกเรียกหรือไม่
     if (!document.querySelector('.product-list').children.length) {

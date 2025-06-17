@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>กรอกข้อมูลลูกค้า</title>
   <link rel="stylesheet" href="style.css">
+  <link rel="preload" href="style.css" as="style">
+  <link rel="preload" href="form.js" as="script">
+  <link rel="preconnect" href="https://static.line-scdn.net" crossorigin>
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script>
 function showLiffErrorPopup(msg, err) {
@@ -96,6 +99,6 @@ document.addEventListener('DOMContentLoaded', () => {
   <footer>
     LUCKY Delivery &copy; 2024
   </footer>
-  <script type="module" src="form.js"></script>
+  <script type="module" src="form.js" defer></script>
 </body>
 </html>

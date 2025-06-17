@@ -34,7 +34,7 @@ function renderProducts() {
     let qty = cart[p.id] || 0;
     if (isWater && !cart.hasOwnProperty(p.id)) qty = 0;
     return `
-      <div class="product-card${qty > 0 ? ' in-cart' : ''}">
+      <div class="product-card${qty > 0 ? ' in-cart' : ''}" tabindex="0" aria-label="${p.name}, ราคา ${p.price} บาท, คงเหลือ ${p.stock} ชิ้น">
         <div class="product-icon" style="font-size:2.2em;text-align:center;margin-bottom:0.3em;">${p.icon}</div>
         <div class="product-info">
           <div class="product-name">${p.name}</div>
@@ -42,9 +42,9 @@ function renderProducts() {
           <div class="product-price">฿${p.price}</div>
         </div>
         <div class="product-qty-group" role="group" aria-label="จำนวน ${p.name}">
-          <button type="button" class="qty-btn" aria-label="ลดจำนวน" data-target="${p.id}">-</button>
+          <button type="button" class="qty-btn" aria-label="ลดจำนวน ${p.name}" data-target="${p.id}">-</button>
           <input type="number" name="${p.id}" min="0" max="99" value="${qty}" class="product-qty" aria-label="จำนวน ${p.name}">
-          <button type="button" class="qty-btn" aria-label="เพิ่มจำนวน" data-target="${p.id}">+</button>
+          <button type="button" class="qty-btn" aria-label="เพิ่มจำนวน ${p.name}" data-target="${p.id}">+</button>
         </div>
       </div>
     `;
@@ -92,6 +92,7 @@ function showPopup(msg) {
 
 document.addEventListener('DOMContentLoaded', () => {
   loadProductsAndRender();
+  sessionStorage.setItem('PRODUCTS', JSON.stringify(PRODUCTS));
   document.querySelector('.product-list').addEventListener('click', e => {
     if (e.target.classList.contains('qty-btn')) {
       const id = e.target.dataset.target;

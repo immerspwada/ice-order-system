@@ -12,8 +12,26 @@ export const config = {
     baseUrl: 'https://your-api.com'
   },
   shippingCost: 50, // ค่าส่ง
-  freeShippingThreshold: 1000 // ยอดซื้อขั้นต่ำส่งฟรี
+  freeShippingThreshold: 1000, // ยอดซื้อขั้นต่ำส่งฟรี
+  coupons: [
+    {
+      code: 'FREESHIP',
+      type: 'fixed',      // ประเภทส่วนลด
+      value: 50,          // ค่าใช้จ่ายส่วนลด
+      minPurchase: 500,   // ยอดซื้อขั้นต่ำ
+      maxDiscount: 50,    // ส่วนลดสูงสุด
+      expiryDate: '2023-12-31' // วันหมดอายุ
+    }
+  ]
 };
+  
+// Utility functions
+export function log(type, message, data = null) {
+  if (config.debug) {
+    console.log(`[${type}] ${message}`, data || '');
+  }
+}
+  
 
 // Utility functions
 export function log(type, message, data = null) {

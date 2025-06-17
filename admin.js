@@ -166,7 +166,8 @@ function renderOrders(search = '') {
     filtered = orders.filter(o =>
       (o.name||'').toLowerCase().includes(s) ||
       (o.phone||'').toLowerCase().includes(s) ||
-      (o.status||'').toLowerCase().includes(s)
+      (o.status||'').toLowerCase().includes(s) ||
+      (o.email||'').toLowerCase().includes(s)
     );
   }
   if (!filtered.length) {
@@ -174,16 +175,18 @@ function renderOrders(search = '') {
     return;
   }
   div.innerHTML = `<table style="width:100%;max-width:900px;margin:auto;border-collapse:collapse;">
-    <tr style="background:#fffbe7;font-weight:700;color:#BFA600;"><th>วัน-เวลา</th><th>ชื่อ</th><th>โทร</th><th>ที่อยู่</th><th>สินค้า</th><th>slip</th><th>ค่าส่ง</th><th>ยอดรวม</th><th>สถานะ</th><th>แจ้งลูกค้า</th><th>ลบ</th></tr>
+    <tr style="background:#fffbe7;font-weight:700;color:#BFA600;"><th>วัน-เวลา</th><th>ชื่อ</th><th>อีเมล</th><th>โทร</th><th>ที่อยู่</th><th>สินค้า</th><th>slip</th><th>ค่าส่ง</th><th>ส่วนลด</th><th>ยอดรวม</th><th>สถานะ</th><th>แจ้งลูกค้า</th><th>ลบ</th></tr>
     ${filtered.map((o,i)=>`
       <tr>
         <td style="font-size:0.98em;">${o.datetime||'-'}</td>
         <td><input type="text" value="${o.name||''}" data-idx="${i}" data-field="name" style="width:90px;"></td>
+        <td><input type="text" value="${o.email||''}" data-idx="${i}" data-field="email" style="width:140px;"></td>
         <td><input type="text" value="${o.phone||''}" data-idx="${i}" data-field="phone" style="width:90px;"></td>
         <td><textarea data-idx="${i}" data-field="address" style="width:120px;">${o.address||''}</textarea></td>
         <td style="font-size:0.98em;">${Object.values(o.products||{}).filter(p=>p.qty>0).map(p=>`${p.name} x${p.qty}`).join('<br>')}</td>
         <td>${o.slip?`<a href="${o.slip}" target="_blank">ดู</a>`:'-'}</td>
         <td>${o.shipping||0}</td>
+        <td>${o.discount||0}</td>
         <td>${o.total||0}</td>
         <td>
           <select data-idx="${i}" data-field="status" class="order-status">
@@ -496,3 +499,102 @@ document.addEventListener('DOMContentLoaded', () => {
       .catch(error => console.error('Service Worker registration failed:', error));
   }
 });
+
+// --- Coupon log (mock: localStorage) ---
+function getCoupons() {
+  return JSON.parse(localStorage.getItem('adminCoupons') || '[]');
+}
+function saveCoupons(coupons) {
+  localStorage.setItem('adminCoupons', JSON.stringify(coupons));
+}
+
+function renderCouponAdmin() {
+  const coupons = getCoupons();
+  const div = document.getElementById('couponAdmin');
+  div.innerHTML = `<table style="width:100%;max-width:700px;margin:auto;border-collapse:collapse;">
+    <tr style="background:#fffbe7;font-weight:700;color:#BFA600;"><th>โค้ด</th><th>ส่วนลด</th><th>ขั้นต่ำ</th><th>ลบ</th></tr>
+    ${coupons.map((c,i)=>`
+      <tr>
+        <td><input type="text" value="${c.code}" data-idx="${i}" data-field="code" style="width:120px;"></td>
+        <td><input type="number" value="${c.discount}" min="0" data-idx="${i}" data-field="discount" style="width:70px;"></td>
+        <td><input type="number" value="${c.minOrder||0}" min="0" data-idx="${i}" data-field="minOrder" style="width:60px;"></td>
+        <td><button class="del-coupon-btn" data-idx="${i}" style="color:#d32f2f;font-weight:700;">ลบ</button></td>
+      </tr>
+    `).join('')}
+  </table>`;
+}
+
+document.getElementById('couponAdmin').onclick = function(e) {
+  if (e.target.classList.contains('del-coupon-btn')) {
+    const idx = +e.target.dataset.idx;
+    if (confirm('ลบคูปองนี้?')) {
+      const coupons = getCoupons();
+      coupons.splice(idx,1);
+      saveCoupons(coupons);
+      renderCouponAdmin();
+    }
+  }
+  if (e.target.id === 'addCouponBtn') {
+    const coupons = getCoupons();
+    coupons.push({ code: 'new_'+Date.now(), discount: 0, minOrder: 0 });
+    saveCoupons(coupons);
+    renderCouponAdmin();
+  }
+};
+
+document.getElementById('saveCouponsBtn').onclick = withLoading(function() {
+  const coupons = getCoupons();
+  document.querySelectorAll('#couponAdmin input').forEach(input => {
+    const idx = +input.dataset.idx;
+    const field = input.dataset.field;
+    if (field === 'discount' || field === 'minOrder') coupons[idx][field] = +input.value;
+    else coupons[idx][field] = input.value;
+  });
+  saveCoupons(coupons);
+  alert('บันทึกคูปองเรียบร้อย');
+  renderCouponAdmin();
+});
+
+// --- Stock log (mock: localStorage) ---
+function getStock() {
+  return JSON.parse(localStorage.getItem('adminStock') || '[]');
+}
+function saveStock(stock) {
+  localStorage.setItem('adminStock', JSON.stringify(stock));
+}
+
+function renderStockAdmin() {
+  const stock = getStock();
+  const div = document.getElementById('stockAdmin');
+  div.innerHTML = `<table style="width:100%;max-width:700px;margin:auto;border-collapse:collapse;">
+    <tr style="background:#fffbe7;font-weight:700;color:#BFA600;"><th>สินค้า</th><th>สต็อก</th></tr>
+    ${stock.map((s,i)=>`
+      <tr>
+        <td>${s.name}</td>
+        <td><input type="number" value="${s.stock}" data-idx="${i}" data-field="stock" style="width:70px;"></td>
+      </tr>
+    `).join('')}
+  </table>`;
+}
+
+document.getElementById('saveStockBtn').onclick = withLoading(function() {
+  const stock = getStock();
+  document.querySelectorAll('#stockAdmin input').forEach(input => {
+    const idx = +input.dataset.idx;
+    const field = input.dataset.field;
+    stock[idx][field] = +input.value;
+  });
+  saveStock(stock);
+  alert('บันทึกสต็อกสินค้าเรียบร้อย');
+  renderStockAdmin();
+});
+
+// --- เรียก render ครั้งแรก ---
+renderProductAdmin();
+renderOrders();
+renderCouponAdmin();
+renderStockAdmin();
+
+
+
+

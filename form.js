@@ -28,6 +28,7 @@ async function showProfile() {
       <img src="${profile.pictureUrl}" style="width:64px;height:64px;border-radius:50%;box-shadow:0 2px 8px #ffe082;">
       <div style="font-weight:700;margin-top:0.5em;">${profile.displayName}</div>
       <div style="font-size:0.95em;color:#888;">LINE ID: <span style="font-family:monospace;">${profile.userId}</span></div>
+      ${profile.email ? `<div style="font-size:0.95em;color:#888;">Email: ${profile.email}</div>` : ''}
     `;
     lineProfileBox.style.display = '';
     document.getElementById('nameInput').value = profile.displayName;
@@ -52,16 +53,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       const phone = customerForm.phone.value.trim();
       const address = customerForm.address.value.trim();
       const lineUserId = sessionStorage.getItem('lineUserId') || '';
+      const email = sessionStorage.getItem('lineEmail') || '';
       if (!name || !phone || !address) {
         showToast('กรุณากรอกข้อมูลให้ครบถ้วน');
         return;
       }
-      if (!/^[0-9]{9,12}$/.test(phone)) {
+      if (!/^\d{9,12}$/.test(phone)) {
         showToast('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง');
         return;
       }
       // Save to localStorage
-      const customerInfo = { name, phone, address, lineUserId };
+      const customerInfo = { name, phone, address, lineUserId, email };
       localStorage.setItem('customerInfo', JSON.stringify(customerInfo));
       saveLastAddress(address); // บันทึกที่อยู่ล่าสุด
       showToast('บันทึกข้อมูลสำเร็จ', 1200);

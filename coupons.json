@@ -1,0 +1,12 @@
+[
+  {
+    "code": "WELCOME100",
+    "discount": 100,
+    "minOrder": 500
+  },
+  {
+    "code": "FREESHIP",
+    "discount": 50,
+    "minOrder": 300
+  }
+]
