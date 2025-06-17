@@ -17,6 +17,33 @@
     </nav>
   </header>
   <div id="orderSummary"></div>
-  <script src="summary.js"></script>
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  <script type="module">
+    import { liffId } from './config.js';
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        await liff.init({ liffId });
+        if (!liff.isLoggedIn()) {
+          liff.login({ redirectUri: window.location.href });
+          return;
+        }
+        // ตรวจสอบข้อมูล session ก่อนโหลด summary.js
+        const customerInfo = JSON.parse(sessionStorage.getItem('customerInfo') || '{}');
+        const orderProducts = JSON.parse(sessionStorage.getItem('orderProducts') || '{}');
+        if (!customerInfo.name || Object.keys(orderProducts).length === 0) {
+          alert('ไม่พบข้อมูลการสั่งซื้อ กรุณากลับไปกรอกข้อมูล');
+          window.location.href = 'form.html';
+          return;
+        }
+        // โหลด summary.js หลังผ่าน LIFF และ session check
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = 'summary.js';
+        document.body.appendChild(script);
+      } catch (err) {
+        alert('เกิดข้อผิดพลาด: ' + (err.message || err));
+      }
+    });
+  </script>
 </body>
 </html>
