@@ -35,9 +35,6 @@ function renderProductAdmin() {
         <td><button class="del-prod-btn" data-idx="${i}" style="color:#d32f2f;font-weight:700;">ลบ</button></td>
       </tr>
     `).join('')}
-    <tr><td colspan="5" style="text-align:center;padding:1em 0;">
-      <button id="addProductBtn" class="btn-main" style="background:#ffe082;color:#BFA600;">+ เพิ่มสินค้าใหม่</button>
-    </td></tr>
   </table>`;
 }
 
@@ -177,7 +174,7 @@ function renderOrders(search = '') {
     return;
   }
   div.innerHTML = `<table style="width:100%;max-width:900px;margin:auto;border-collapse:collapse;">
-    <tr style="background:#fffbe7;font-weight:700;color:#BFA600;"><th>วัน-เวลา</th><th>ชื่อ</th><th>โทร</th><th>ที่อยู่</th><th>สินค้า</th><th>slip</th><th>สถานะ</th><th>แจ้งลูกค้า</th><th>ลบ</th></tr>
+    <tr style="background:#fffbe7;font-weight:700;color:#BFA600;"><th>วัน-เวลา</th><th>ชื่อ</th><th>โทร</th><th>ที่อยู่</th><th>สินค้า</th><th>slip</th><th>ค่าส่ง</th><th>ยอดรวม</th><th>สถานะ</th><th>แจ้งลูกค้า</th><th>ลบ</th></tr>
     ${filtered.map((o,i)=>`
       <tr>
         <td style="font-size:0.98em;">${o.datetime||'-'}</td>
@@ -186,6 +183,8 @@ function renderOrders(search = '') {
         <td><textarea data-idx="${i}" data-field="address" style="width:120px;">${o.address||''}</textarea></td>
         <td style="font-size:0.98em;">${Object.values(o.products||{}).filter(p=>p.qty>0).map(p=>`${p.name} x${p.qty}`).join('<br>')}</td>
         <td>${o.slip?`<a href="${o.slip}" target="_blank">ดู</a>`:'-'}</td>
+        <td>${o.shipping||0}</td>
+        <td>${o.total||0}</td>
         <td>
           <select data-idx="${i}" data-field="status" class="order-status">
             <option value="pending" ${o.status==='pending'?'selected':''}>รอดำเนินการ</option>
@@ -490,4 +489,10 @@ document.addEventListener('DOMContentLoaded', () => {
   btn.onclick = () => renderOrdersFromFile();
   const adminDiv = document.getElementById('ordersAdmin');
   if (adminDiv) adminDiv.parentNode.insertBefore(btn, adminDiv);
+  // Register service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(registration => console.log('Service Worker registered with scope:', registration.scope))
+      .catch(error => console.error('Service Worker registration failed:', error));
+  }
 });

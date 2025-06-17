@@ -1,3 +1,5 @@
+import { config, log } from './config.js';
+
 // summary.js: รองรับการใช้งานใน LIFF (LINE Front-end Framework)
 // - แสดงข้อมูลสรุปคำสั่งซื้อหลังผ่าน LIFF และ session check จาก summary.html
 
@@ -7,7 +9,9 @@ function saveUserProfile(profile) {
   userProfiles[profile.userId] = {
     displayName: profile.displayName,
     pictureUrl: profile.pictureUrl,
-    userId: profile.userId
+    userId: profile.userId,
+    email: profile.email || '', // เพิ่มการเก็บอีเมล
+    statusMessage: profile.statusMessage || '' // เพิ่มข้อมูล status message
   };
   localStorage.setItem('userProfiles', JSON.stringify(userProfiles));
 }
@@ -76,6 +80,20 @@ function validateSessionData(data) {
   }
 }
 
+// เพิ่มฟังก์ชันแสดง Toast notification
+function showToast(message, duration = 3000) {
+  let toast = document.querySelector('.toast-notification');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), duration);
+}
+
+// ปรับปรุงฟังก์ชัน validateOrderProducts
 function validateOrderProducts(products) {
   if (!products || typeof products !== 'object') {
     throw new Error('ไม่พบข้อมูลสินค้า');
@@ -83,6 +101,21 @@ function validateOrderProducts(products) {
   const hasValidProduct = Object.values(products).some(p => p && p.qty > 0);
   if (!hasValidProduct) {
     throw new Error('ไม่พบรายการสินค้า');
+  }
+
+  // เพิ่มการตรวจสอบขั้นต่ำของแต่ละประเภท
+  let totalWater = 0;
+  let totalIce = 0;
+  Object.entries(products).forEach(([id, p]) => {
+    if (id.startsWith('bottle_')) totalWater += p.qty;
+    if (id.startsWith('ice_')) totalIce += p.qty;
+  });
+
+  if (totalWater > 0 && totalWater < config.minOrder.water) {
+    throw new Error(`น้ำดื่มต้องสั่งขั้นต่ำ ${config.minOrder.water} แพ็ค`);
+  }
+  if (totalIce > 0 && totalIce < config.minOrder.ice) {
+    throw new Error(`น้ำแข็งต้องสั่งขั้นต่ำ ${config.minOrder.ice} ถุง`);
   }
 }
 
@@ -101,6 +134,12 @@ function renderSummary() {
     const orderProducts = JSON.parse(sessionStorage.getItem('orderProducts') || '{}');
     
     validateSessionData(customerInfo);
+    
+    // เพิ่มการตรวจสอบว่า orderProducts ว่างหรือไม่
+    if (!orderProducts || Object.keys(orderProducts).length === 0) {
+      throw new Error('ไม่พบรายการสินค้า');
+    }
+
     validateOrderProducts(orderProducts);
     
     log('INFO', 'ข้อมูลลูกค้า:', customerInfo);
@@ -124,20 +163,28 @@ function renderSummary() {
     }
     // --- เพิ่มการแสดงโปรไฟล์ผู้ใช้ ---
     let userProfile = getUserProfile(lineUserId);
-    let html = `<div style=\"text-align:center;margin-bottom:1.2rem;\">`;
+    let html = `<div style="text-align:center;margin-bottom:1.2rem;">`;
     if (userProfile && userProfile.pictureUrl) {
       html += `<img src='${userProfile.pictureUrl}' alt='profile' style='width:64px;height:64px;border-radius:50%;box-shadow:0 2px 8px #ffe082;margin-bottom:0.5em;'>`;
     }
-    html += `<svg width=\"48\" height=\"48\" viewBox=\"0 0 56 56\" fill=\"none\" style=\"vertical-align:middle;\"><circle cx=\"28\" cy=\"28\" r=\"28\" fill=\"#FFA726\"/><path d=\"M17 29.5L25.5 38L39 22\" stroke=\"#fff\" stroke-width=\"3.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>\n    <div style=\"font-size:1.35rem;font-weight:700;color:#FFA726;margin-top:0.5rem;letter-spacing:0.5px;\">ตรวจสอบข้อมูลก่อนยืนยัน</div>\n  </div>`;
-    if (lineUserId) {
-      html += `<div style='background:#e0f7fa;border-radius:12px;padding:0.7em 1em;margin-bottom:1em;text-align:left;max-width:420px;margin-left:auto;margin-right:auto;'>`;
-      if (userProfile && userProfile.displayName) {
-        html += `<b style='color:#00bfff;'>บัญชี LINE:</b> <span style='font-weight:600;'>${userProfile.displayName}</span><br>`;
-      } else {
-        html += `<b style='color:#00bfff;'>บัญชี LINE:</b> <span style='font-weight:600;'>${lineProfileName}</span><br>`;
+    html += `<svg width="48" height="48" viewBox="0 0 56 56" fill="none" style="vertical-align:middle;"><circle cx="28" cy="28" r="28" fill="#FFA726"/><path d="M17 29.5L25.5 38L39 22" stroke="#fff" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div style="font-size:1.35rem;font-weight:700;color:#FFA726;margin-top:0.5rem;letter-spacing:0.5px;">ตรวจสอบข้อมูลก่อนยืนยัน</div>
+  </div>`;
+  if (lineUserId) {
+    html += `<div style='background:#e0f7fa;border-radius:12px;padding:0.7em 1em;margin-bottom:1em;text-align:left;max-width:420px;margin-left:auto;margin-right:auto;'>`;
+    if (userProfile && userProfile.displayName) {
+      html += `<b style='color:#00bfff;'>บัญชี LINE:</b> <span style='font-weight:600;'>${userProfile.displayName}</span><br>`;
+      if (userProfile.email) {
+        html += `<b style='color:#00bfff;'>อีเมล:</b> <span style='font-weight:500;'>${userProfile.email}</span><br>`;
       }
-      html += `<span style='font-size:0.97em;color:#888;'>userId: <span style='font-family:monospace;'>${lineUserId}</span></span></div>`;
+      if (userProfile.statusMessage) {
+        html += `<span style='color:#666;font-size:0.95em;'>"${userProfile.statusMessage}"</span><br>`;
+      }
+    } else {
+      html += `<b style='color:#00bfff;'>บัญชี LINE:</b> <span style='font-weight:600;'>${lineProfileName}</span><br>`;
     }
+    html += `<span style='font-size:0.97em;color:#888;'>userId: <span style='font-family:monospace;'>${lineUserId}</span></span></div>`;
+  }
     html += `<div style=\"background:#FFF3E0;border-radius:16px;padding:1.2rem 1.2rem 0.7rem 1.2rem;box-shadow:0 2px 8px #ffe0b2;border:1.2px solid #FFA726;max-width:420px;margin:auto;\">
       <div style=\"font-size:1.13rem;font-weight:600;color:#FFA726;margin-bottom:0.7rem;\">ข้อมูลลูกค้า</div>
       <div style=\"font-size:1.05rem;margin-bottom:0.7rem;line-height:1.7;\">
@@ -156,7 +203,10 @@ function renderSummary() {
       }
     });
     html += '</ul>';
-    html += `<div style='margin-top:1.2rem;font-size:1.15rem;font-weight:700;color:#FFA726;text-align:right;'>รวมทั้งสิ้น: <span style='color:#d32f2f;'>฿${total.toLocaleString()}</span> บาท</div>`;
+
+    const shipping = calculateShipping(total, customerInfo.address);
+
+    html += `<div style='margin-top:1.2rem;font-size:1.15rem;font-weight:700;color:#FFA726;text-align:right;'>รวมทั้งสิ้น: <span style='color:#d32f2f;'>฿${(total + shipping).toLocaleString()}</span> บาท</div>`;
     html += '</div>';
     html += `<div style=\"background:#FFE0B2;border-radius:14px;padding:1.2rem 1rem 1.2rem 1rem;box-shadow:0 1px 4px #ffe0b2;margin:1.5rem 0 1rem 0;text-align:center;max-width:420px;margin-left:auto;margin-right:auto;\">\n    <label style=\"font-weight:600;color:#FFA726;\">อัปโหลดสลิปโอนเงิน (ถ้ามี):<br>
         <input type=\"file\" id=\"slipInput\" accept=\"image/*\" style=\"margin-top:0.5rem;\">
@@ -208,7 +258,7 @@ function renderSummary() {
         spinner.style.display = 'inline-block';
       }
       // Merge all data and go to receipt
-      const orderData = { ...customerInfo, products: orderProducts, slip: slipDataUrl };
+      const orderData = { ...customerInfo, products: orderProducts, slip: slipDataUrl, total: total + shipping, shipping: shipping };
       sessionStorage.setItem('orderData', JSON.stringify(orderData));
       try {
         const orders = JSON.parse(localStorage.getItem('adminOrders') || '[]');
@@ -254,50 +304,120 @@ function downloadReceipt() {
 document.addEventListener('DOMContentLoaded', async () => {
   log('INFO', 'เริ่มต้นแอปพลิเคชัน');
   
-  if (!window.liff) {
-    log('ERROR', 'ไม่พบ LIFF object');
-    renderSummary();
-    return;
-  }
-
   try {
-    log('INFO', 'กำลังเริ่มต้น LIFF');
-    await liff.init({ liffId: '2006986568-yjrOkKqm' }); // แก้ไข LIFF ID
-    
-    if (!liff.isInClient()) {
-      log('WARN', 'ไม่ได้เปิดใน LINE');
-      alert('กรุณาเปิดหน้านี้ผ่านแอป LINE เท่านั้น');
-      renderSummary();
+    const initialized = await initializeLiff();
+    if (!initialized) {
+      log('ERROR', 'LIFF initialization failed');
       return;
     }
-
-    if (!liff.isLoggedIn()) {
-      log('INFO', 'ผู้ใช้ยังไม่ได้ login');
-      liff.login();
-      return;
-    }
-
-    const profile = await liff.getProfile();
-    log('INFO', 'ได้รับข้อมูลโปรไฟล์:', profile);
-    saveUserProfile(profile);
-    sessionStorage.setItem('lineUserId', profile.userId);
-    
     renderSummary();
-
   } catch (error) {
     log('ERROR', 'เกิดข้อผิดพลาดในการเริ่มต้น LIFF:', error);
     renderSummary();
   }
 });
 
-async function reverseGeocode(lat, lng) {
-  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=th`;
-  const res = await fetch(url, { headers: { 'User-Agent': 'LuckyDelivery/1.0' } });
-  const data = await res.json();
-  return data.display_name || '';
+async function initializeLiff() {
+  try {
+    log('INFO', 'Initializing LIFF');
+    
+    if (!window.liff) {
+      throw new Error('LIFF SDK not loaded');
+    }
+
+    await liff.init({ liffId: config.liffId });
+    
+    if (!liff.isLoggedIn()) {
+      log('INFO', 'User not logged in');
+      liff.login();
+      return false;
+    }
+
+    if (!liff.isInClient()) {
+      log('WARN', 'Not in LINE client');
+      alert('กรุณาเปิดผ่านแอป LINE เท่านั้น');
+      return false;
+    }
+
+    const profile = await liff.getProfile();
+    log('INFO', 'Got user profile', profile);
+    
+    saveUserProfile(profile);
+    sessionStorage.setItem('lineUserId', profile.userId);
+    
+    return true;
+
+  } catch (error) {
+    log('ERROR', 'LIFF initialization failed', error);
+    showToast('เกิดข้อผิดพลาดในการเริ่มต้น LIFF');
+    return false;
+  }
 }
 
-// ตัวอย่างการใช้งาน
-reverseGeocode(6.02458, 101.96366).then(address => {
-  console.log(address); // จะได้ที่อยู่ภาษาไทย
-});
+// เพิ่มฟังก์ชันสำหรับดึงที่อยู่จาก lat/lng
+async function reverseGeocode(lat, lng) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=th`;
+    const res = await fetch(url, { headers: { 'User-Agent': 'LuckyDelivery/1.0' } });
+     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+    const data = await res.json();
+    return data.display_name || '';
+  } catch (error) {
+    log('ERROR', 'Reverse geocoding failed', error);
+    showToast('เกิดข้อผิดพลาดในการดึงข้อมูลที่อยู่');
+    return '';
+  }
+}
+
+// ปรับปรุง validation
+function validateOrder(data) {
+  const required = ['name', 'phone', 'address', 'products'];
+  const missing = required.filter(field => !data[field]);
+  
+  if (missing.length > 0) {
+    throw new Error(`ข้อมูลไม่ครบ: ${missing.join(', ')}`);
+  }
+
+  // Validate product quantities
+  Object.entries(data.products).forEach(([id, product]) => {
+    if (id.startsWith('bottle_') && product.qty < config.minOrder.water) {
+      throw new Error(`น้ำดื่มต้องสั่งขั้นต่ำ ${config.minOrder.water} แพ็ค`);
+    }
+  });
+}
+
+// เพิ่มฟังก์ชันคำนวณค่าส่ง
+function calculateShipping(total, address) {
+  let shipping = 0;
+  if (total < config.freeShippingThreshold) {
+    shipping = config.shippingCost;
+  }
+  // คำนวณระยะทางและเพิ่มค่าส่งตามโซน
+  // ...
+  return shipping;
+}
+
+// ปรับปรุงการแสดงผลรวม
+function renderOrderSummary(orderProducts, shipping) {
+  let html = '';
+  let subtotal = 0;
+  // ...existing rendering code...
+  
+  html += `
+    <div class="summary-total">
+      <div class="summary-row">
+        <span>ยอดรวมสินค้า:</span>
+        <span>฿${subtotal.toLocaleString()}</span>
+      </div>
+      <div class="summary-row">
+        <span>ค่าจัดส่ง:</span>
+        <span>฿${shipping.toLocaleString()}</span>
+      </div>
+      <div class="summary-row total">
+        <span>รวมทั้งสิ้น:</span>
+        <span>฿${(subtotal + shipping).toLocaleString()}</span>
+      </div>
+    </div>
+  `;
+  return html;
+}

@@ -1,21 +1,21 @@
 /* --- ฟอนต์และสีหลัก --- */
 body {
   font-family: 'Prompt', 'Noto Sans Thai', sans-serif;
-  background: linear-gradient(135deg, #fffbe7 0%, #fff 100%);
-  color: #181818;
+  background: linear-gradient(135deg, #fffbe7 0%, #f8f8ff 100%); /* สีใหม่ */
+  color: #333; /* สีตัวอักษร */
   margin: 0;
   min-height: 100vh;
 }
 :root {
-  --primary: #FFA726;
-  --primary-dark: #BFA600;
-  --accent: #FFD700;
-  --accent-light: #FFF8DC;
-  --danger: #d32f2f;
-  --info: #FFA726; /* เปลี่ยนจาก #00bfff เป็นสีส้ม */
-  --bg-card: #fffbe7;
-  --bg-step: #fffbe7;
-  --shadow: 0 6px 32px rgba(191,166,0,0.13), 0 1.5px 8px #fffbe7;
+  --primary: #FF9800; /* สีส้มใหม่ */
+  --primary-dark: #F57C00;
+  --accent: #FFC107;
+  --accent-light: #FFF9C4;
+  --danger: #F44336;
+  --info: #FF9800;
+  --bg-card: #fff; /* สีขาว */
+  --bg-step: #fff;
+  --shadow: 0 4px 12px rgba(0,0,0,0.08); /* เงา */
 }
 
 h1, h2, h3 {
@@ -50,9 +50,9 @@ h1, h2, h3 {
   max-width: 430px;
   background: #fff;
   border-radius: 12px;
-  box-shadow: none;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* เพิ่มเงา */
   padding: 0.7rem 0.5rem;
-  border: 1.5px solid #eee;
+  border: none; /* ลบเส้นขอบ */
   position: relative;
 }
 .stepper::before {
@@ -118,18 +118,22 @@ h1, h2, h3 {
 .product-card {
   background: var(--bg-card);
   border-radius: 16px;
-  box-shadow: 0 2px 8px #ffe0b2;
-  border: 1.2px solid var(--primary);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1); /* เพิ่มเงา */
+  border: none; /* ลบเส้นขอบ */
   padding: 1.1em 0.7em 0.7em 0.7em;
   margin-bottom: 1.1em;
   display: flex;
   flex-direction: column;
   align-items: center;
-  transition: box-shadow 0.2s, border 0.2s;
+  transition: transform 0.2s, box-shadow 0.2s; /* เพิ่ม animation */
 }
 .product-card.in-cart {
   border: 2.5px solid var(--primary-dark);
   box-shadow: 0 4px 16px #ffd70055;
+}
+.product-card:hover {
+  transform: translateY(-4px); /* ยก card ขึ้น */
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
 }
 .product-icon {
   font-size: 2.2em;
@@ -198,12 +202,14 @@ h1, h2, h3 {
   margin-top: 1.7rem;
   cursor: pointer;
   font-weight: 700;
-  box-shadow: 0 2px 12px #fffbe7;
-  transition: background 0.2s, color 0.2s;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1); /* เพิ่มเงา */
+  transition: transform 0.2s, box-shadow 0.2s; /* เพิ่ม animation */
   letter-spacing: 0.5px;
   border: 1.5px solid var(--accent-light);
 }
 .btn-main:hover {
+  transform: translateY(-2px); /* ยก button ขึ้น */
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
   background: linear-gradient(90deg, var(--primary) 0%, #ffe082 100%);
   color: var(--primary-dark);
 }
@@ -222,12 +228,12 @@ h1, h2, h3 {
   left: 50%;
   bottom: 2.5em;
   transform: translateX(-50%);
-  background: var(--primary-dark);
+  background: rgba(0,0,0,0.7); /* สีพื้นหลัง */
   color: #fff;
   padding: 1em 2em;
   border-radius: 12px;
   font-size: 1.08em;
-  box-shadow: 0 2px 12px #ffd70099;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2); /* เพิ่มเงา */
   z-index: 9999;
   opacity: 0;
   pointer-events: none;
@@ -236,6 +242,23 @@ h1, h2, h3 {
 .toast.show {
   opacity: 1;
   pointer-events: auto;
+}
+.toast-notification {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 12px 24px;
+  border-radius: 8px;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.toast-notification.show {
+  opacity: 1;
 }
 
 /* --- Responsive Grid --- */
@@ -255,11 +278,11 @@ h1, h2, h3 {
 form {
   background: #fff;
   border-radius: 18px;
-  box-shadow: var(--shadow);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.1); /* เพิ่มเงา */
   padding: 2.2rem 1.2rem 1.5rem 1.2rem;
   max-width: 400px;
   margin: 2.2rem auto 0 auto;
-  border: 1.5px solid var(--accent-light);
+  border: none; /* ลบเส้นขอบ */
 }
 .input-label {
   font-weight: 600;
@@ -270,7 +293,7 @@ form {
 input, textarea {
   width: 100%;
   font-size: 1.08em;
-  border: 1.2px solid var(--primary);
+  border: 1px solid #ccc; /* เส้นขอบ */
   border-radius: 7px;
   padding: 0.7em 0.6em;
   margin-top: 0.3em;
@@ -278,10 +301,13 @@ input, textarea {
   background: #fffbe7;
   font-family: inherit;
   box-sizing: border-box;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08); /* เพิ่มเงา */
+  transition: border-color 0.2s;
 }
 input:focus, textarea:focus {
-  outline: 2px solid var(--primary);
-  background: #fffde7;
+  outline: none; /* ลบเส้นขอบ focus */
+  border-color: var(--primary); /* เปลี่ยนสีเส้นขอบ */
+  box-shadow: 0 1px 4px rgba(0,0,0,0.1); /* เพิ่มเงา */
 }
 .form-hint {
   color: #888;
@@ -330,4 +356,18 @@ input:focus, textarea:focus {
     max-width: 98vw;
     border-radius: 8px;
   }
+}
+
+header {
+  background: #fff;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.05);
+  padding: 1em 0;
+  text-align: center;
+}
+
+footer {
+  text-align: center;
+  padding: 2em 0;
+  color: #888;
+  font-size: 0.9em;
 }

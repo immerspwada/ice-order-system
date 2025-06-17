@@ -2,10 +2,23 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <title>สรุปคำสั่งซื้อ</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;700&display=swap" rel="stylesheet">
+  <title>สรุปคำสั่งซื้อ - LUCKY Delivery</title>
+  
+  <!-- External CSS -->
   <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- LIFF SDK -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+  
+  <!-- Error Handling -->
+  <script>
+    window.addEventListener('error', function(e) {
+      console.error('Global error:', e);
+      alert('เกิดข้อผิดพลาด: ' + e.message);
+    });
+  </script>
   <!-- สามารถเพิ่ม CSS เพิ่มเติมได้ที่นี่ -->
   <style>
     body { font-family: 'Prompt', sans-serif; background: #fff8f0; margin: 0; padding: 0; }
@@ -205,6 +218,41 @@
         background: linear-gradient(180deg, #FFA726 0%, #FF7043 100%);
       }
     }
+    .toast-notification {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.8);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .toast-notification.show {
+      opacity: 1;
+    }
+
+    .summary-total {
+      margin-top: 20px;
+      border-top: 2px dashed #FFA726;
+      padding-top: 15px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .summary-row.total {
+      font-size: 1.2em;
+      font-weight: bold;
+      color: #d32f2f;
+    }
   </style>
 </head>
 <body>
@@ -233,7 +281,12 @@
     import { liffId } from './config.js';
     window.addEventListener('DOMContentLoaded', async () => {
       try {
-        await liff.init({ liffId });
+        await liff.init({ 
+          liffId,
+          withLoginOnExternalBrowser: true,
+          // เพิ่ม scope สำหรับขออีเมล
+          scope: ["profile", "openid", "email"]
+        });
         if (!liff.isLoggedIn()) {
           liff.login({ redirectUri: window.location.href });
           return;
@@ -256,5 +309,8 @@
       }
     });
   </script>
+   <footer>
+    LUCKY Delivery &copy; 2024
+  </footer>
 </body>
 </html>

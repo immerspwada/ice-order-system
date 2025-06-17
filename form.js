@@ -1,21 +1,50 @@
-import { liffId } from './config.js'; // นำเข้า liffId จาก config.js
+import { config, log } from './config.js'; // นำเข้า config และ log
 
 // form.js - Step 2: Customer Info Form
 const lineProfileBox = document.getElementById('lineProfileBox');
 const customerForm = document.getElementById('customerForm');
 
-function showProfile(profile) {
-  lineProfileBox.innerHTML = `
-    <img src="${profile.pictureUrl}" style="width:64px;height:64px;border-radius:50%;box-shadow:0 2px 8px #ffe082;">
-    <div style="font-weight:700;margin-top:0.5em;">${profile.displayName}</div>
-    <div style="font-size:0.95em;color:#888;">LINE ID: <span style="font-family:monospace;">${profile.userId}</span></div>
-  `;
-  lineProfileBox.style.display = '';
-  document.getElementById('nameInput').value = profile.displayName;
-  sessionStorage.setItem('lineUserId', profile.userId);
+async function getLineProfile() {
+  try {
+    await liff.init({ liffId: config.liffId });
+    if (!liff.isLoggedIn()) {
+      liff.login({ redirectUri: window.location.href });
+      return null;
+    }
+    const profile = await liff.getProfile();
+    return profile;
+  } catch (err) {
+    log('ERROR', 'LIFF getProfile failed', err);
+    showToast('เกิดข้อผิดพลาดในการดึงข้อมูล LINE Profile');
+    return null;
+  }
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+async function showProfile() {
+  const profile = await getLineProfile();
+  if (profile) {
+    log('INFO', 'LINE profile', profile);
+    lineProfileBox.innerHTML = `
+      <img src="${profile.pictureUrl}" style="width:64px;height:64px;border-radius:50%;box-shadow:0 2px 8px #ffe082;">
+      <div style="font-weight:700;margin-top:0.5em;">${profile.displayName}</div>
+      <div style="font-size:0.95em;color:#888;">LINE ID: <span style="font-family:monospace;">${profile.userId}</span></div>
+    `;
+    lineProfileBox.style.display = '';
+    document.getElementById('nameInput').value = profile.displayName;
+    sessionStorage.setItem('lineUserId', profile.userId);
+  }
+}
+
+function saveLastAddress(address) {
+  localStorage.setItem('lastAddress', address);
+}
+
+function getLastAddress() {
+  return localStorage.getItem('lastAddress') || '';
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await showProfile(); // เรียกใช้ฟังก์ชัน showProfile
   if (customerForm) {
     customerForm.addEventListener('submit', function(e) {
       e.preventDefault();
@@ -31,21 +60,24 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('กรุณากรอกเบอร์โทรศัพท์ให้ถูกต้อง');
         return;
       }
-      // Save to sessionStorage
+      // Save to localStorage
       const customerInfo = { name, phone, address, lineUserId };
-      sessionStorage.setItem('customerInfo', JSON.stringify(customerInfo));
+      localStorage.setItem('customerInfo', JSON.stringify(customerInfo));
+      saveLastAddress(address); // บันทึกที่อยู่ล่าสุด
       showToast('บันทึกข้อมูลสำเร็จ', 1200);
       setTimeout(gotoSummary, 1200);
     });
   }
 
-  // Autofill จาก sessionStorage ถ้ามี
-  const info = JSON.parse(sessionStorage.getItem('customerInfo')||'null');
+  // Autofill จาก localStorage ถ้ามี
+  const info = JSON.parse(localStorage.getItem('customerInfo')||'null');
   if (info) {
     document.getElementById('nameInput').value = info.name||'';
     document.getElementById('phoneInput').value = info.phone||'';
     document.getElementById('addressInput').value = info.address||'';
   }
+  // ดึงที่อยู่ล่าสุด
+  document.getElementById('addressInput').value = getLastAddress();
 });
 
 // --- Toast Notification ---
@@ -99,9 +131,12 @@ async function reverseGeocode(lat, lng) {
   try {
     const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&accept-language=th`;
     const res = await fetch(url, { headers: { 'User-Agent': 'LuckyDelivery/1.0' } });
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     const data = await res.json();
     return data.display_name || `${lat},${lng}`;
   } catch (e) {
+    log('ERROR', 'Reverse geocoding failed', e);
+    showToast('ไม่สามารถดึงข้อมูลที่อยู่จากแผนที่ได้');
     return `${lat},${lng}`;
   }
 }
@@ -127,6 +162,7 @@ if (getLocationBtn) {
       getLocationBtn.disabled = false;
       hidePageLoading();
     }, err => {
+      log('ERROR', 'Geolocation failed', err);
       showToast('ไม่สามารถระบุตำแหน่งได้');
       getLocationBtn.textContent = '📍 ใช้ตำแหน่งจากแผนที่';
       getLocationBtn.disabled = false;

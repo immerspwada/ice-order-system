@@ -3,7 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>เลือกสินค้า - LUCKY Delivery</title>
+  <title>LUCKY Delivery</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#FFA726">
+  <link rel="apple-touch-icon" href="icon-192x192.png">
   <link rel="stylesheet" href="style.css">
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
   <script type="module">
@@ -71,7 +74,6 @@
     </nav>
     <div id="lineProfileBox" style="display:none;position:absolute;top:0.7em;right:1.2em;text-align:right;z-index:20;"></div>
   </header>
-  <div id="status">กำลังโหลด LIFF...</div>
   <div id="error"></div>
   <main class="container">
     <h1>เลือกสินค้า</h1>
@@ -88,11 +90,20 @@
       <div id="cartNotice" class="cart-notice"></div>
     </section>
   </main>
+  <footer>
+    LUCKY Delivery &copy; 2024
+  </footer>
   <script src="order.js"></script>
   <script>
     // ตรวจสอบว่า order.js ถูกโหลดและ renderProducts ถูกเรียกหรือไม่
     if (!document.querySelector('.product-list').children.length) {
       document.querySelector('.product-list').innerHTML = '<div style="color:#d32f2f;text-align:center;padding:2em 0;">ไม่พบสินค้า กรุณารีเฟรชหน้าหรือแจ้งผู้ดูแลระบบ</div>';
+    }
+    // Register service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(registration => console.log('Service Worker registered with scope:', registration.scope))
+        .catch(error => console.error('Service Worker registration failed:', error));
     }
   </script>
   <script>

@@ -56,7 +56,14 @@
     <section>
       <h2>แก้ไขสินค้า/ราคา</h2>
       <div id="productAdmin"></div>
+      <button id="addProductBtn" class="btn-main" style="background:#ffe082;color:#BFA600;">+ เพิ่มสินค้าใหม่</button>
       <button id="saveProductsBtn" class="btn-main">บันทึกสินค้า/ราคา</button>
+      <div id="newProductForm" style="display:none;margin-top:1em;padding:1em;border:1px solid #ccc;border-radius:8px;">
+        <h3>เพิ่มสินค้าใหม่</h3>
+        <label>ชื่อสินค้า: <input type="text" id="newProductName"></label><br>
+        <label>ราคา: <input type="number" id="newProductPrice"></label><br>
+        <button id="createProductBtn" class="btn-main">สร้างสินค้า</button>
+      </div>
     </section>
     <hr style="margin:2em 0;">
     <section>
@@ -65,6 +72,9 @@
       <div id="ordersAdmin"></div>
     </section>
   </main>
+   <footer>
+    LUCKY Delivery &copy; 2024
+  </footer>
   <script src="admin.js"></script>
   <script>
     renderAdminDashboard();

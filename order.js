@@ -125,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const min = prod && prod.min ? prod.min : 0;
       if (!cart[k] || cart[k] < min) delete cart[k];
     });
+    // ตรวจสอบว่า cart ว่างหรือไม่
     if (Object.keys(cart).length === 0) {
       showPopup('กรุณาเลือกสินค้าอย่างน้อย 1 รายการ (น้ำดื่มขั้นต่ำ 10 แพ็ค)');
       return;
