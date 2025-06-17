@@ -16,24 +16,15 @@ export const config = {
   coupons: [
     {
       code: 'FREESHIP',
-      type: 'fixed',      // ประเภทส่วนลด
-      value: 50,          // ค่าใช้จ่ายส่วนลด
-      minPurchase: 500,   // ยอดซื้อขั้นต่ำ
-      maxDiscount: 50,    // ส่วนลดสูงสุด
-      expiryDate: '2023-12-31' // วันหมดอายุ
+      type: 'fixed',
+      value: 50,
+      minPurchase: 500,
+      maxDiscount: 50,
+      expiryDate: '2023-12-31'
     }
   ]
 };
-  
-// Utility functions
-export function log(type, message, data = null) {
-  if (config.debug) {
-    console.log(`[${type}] ${message}`, data || '');
-  }
-}
-  
 
-// Utility functions
 export function log(type, message, data = null) {
   if (config.debug) {
     console.log(`[${type}] ${message}`, data || '');

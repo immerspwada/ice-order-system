@@ -7,135 +7,68 @@
   <meta name="description" content="LUCKY Delivery บริการจัดส่งน้ำแข็ง, แก๊ส, น้ำดื่ม รวดเร็วทันใจ">
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#FFA726">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="mobile-web-app-capable" content="yes">
   <link rel="apple-touch-icon" href="icon-192x192.png">
   <link rel="stylesheet" href="style.css">
-  <link rel="preload" href="style.css" as="style">
-  <link rel="preload" href="order.js" as="script">
-  <link rel="preconnect" href="https://static.line-scdn.net" crossorigin>
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-  <script type="module">
-    import { liffId } from './config.js';
-    window.showLiffErrorPopup = function(msg, err) {
-      let popup = document.getElementById('liffErrorPopup');
-      if (popup) popup.remove();
-      popup = document.createElement('div');
-      popup.id = 'liffErrorPopup';
-      popup.style = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.45);z-index:99999;display:flex;align-items:center;justify-content:center;';
-      let detail = '';
-      if (err) {
-        detail = `<div style='color:#b71c1c;font-size:0.98em;margin-top:0.7em;word-break:break-all;'>${err.message || err.toString()}</div>`;
-      }
-      popup.innerHTML = `
-        <div style="background:#fff;padding:2em 2.5em;border-radius:14px;box-shadow:0 2px 16px #d32f2f55;text-align:center;max-width:90vw;">
-          <div style="font-size:1.25em;font-weight:700;color:#d32f2f;margin-bottom:1em;">เกิดข้อผิดพลาดในการโหลด LINE Login</div>
-          <div style="color:#444;margin-bottom:1.5em;">${msg}</div>
-          ${detail}
-          <button onclick="document.getElementById('liffErrorPopup').remove()" style="background:#d32f2f;color:#fff;padding:0.7em 2em;border:none;border-radius:8px;font-size:1em;font-weight:600;cursor:pointer;">ปิด</button>
-        </div>
-      `;
-      document.body.appendChild(popup);
-    };
-
-    async function ensureLiffLogin() {
-      try {
-        await liff.init({ liffId });
-        if (!liff.isLoggedIn()) {
-          // Show login overlay
-          let overlay = document.getElementById('loginOverlay');
-          if (!overlay) {
-            overlay = document.createElement('div');
-            overlay.id = 'loginOverlay';
-            overlay.style = 'position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(255,255,255,0.95);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;';
-            overlay.innerHTML = `<div style='font-size:1.3em;font-weight:700;margin-bottom:1.5em;'>กรุณาเข้าสู่ระบบด้วย LINE ก่อนใช้งาน</div><button id='liffLoginBtn' style='background:#FFA726;color:#fff;padding:1em 2.5em;border:none;border-radius:10px;font-size:1.1em;font-weight:700;cursor:pointer;'>เข้าสู่ระบบ LINE</button>`;
-            document.body.appendChild(overlay);
-            document.getElementById('liffLoginBtn').onclick = () => liff.login();
-          }
-          return false;
-        } else {
-          // Remove overlay if exists
-          let overlay = document.getElementById('loginOverlay');
-          if (overlay) overlay.remove();
-          return true;
-        }
-      } catch (err) {
-        window.showLiffErrorPopup('LIFF initialization failed.', err);
-        return false;
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-      await ensureLiffLogin();
-    });
-  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&family=Prompt:wght@500;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <header style="position:relative;">
+  <header>
     <nav class="stepper" aria-label="ขั้นตอนการสั่งซื้อ">
       <div class="step active"><span>1</span><div>เลือกสินค้า</div></div>
       <div class="step"><span>2</span><div>ข้อมูลลูกค้า</div></div>
       <div class="step"><span>3</span><div>ยืนยัน</div></div>
       <div class="step"><span>4</span><div>เสร็จสิ้น</div></div>
     </nav>
-    <div id="lineProfileBox" style="display:none;position:absolute;top:0.7em;right:1.2em;text-align:right;z-index:20;"></div>
   </header>
-  <div id="error"></div>
   <main class="container">
-    <h1 tabindex="0" class="animate__animated animate__fadeIn">เลือกสินค้า</h1>
+    <h1 tabindex="0">เลือกสินค้า</h1>
     <section class="product-catalog">
       <form id="productForm">
-        <div class="product-list" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.2em;">
-          <!-- สินค้าทั้งหมดจะถูก render ด้วย JS -->
-        </div>
+        <div class="product-list"></div>
         <div class="cart-summary">
           <span id="totalPrice">รวม: ฿0</span>
-          <button type="submit" class="btn-main animate__animated animate__fadeInUp" aria-label="ไปยังหน้ากรอกข้อมูลลูกค้า">ถัดไป</button>
+          <button type="submit" class="btn-main" aria-label="ไปยังหน้ากรอกข้อมูลลูกค้า">ถัดไป</button>
         </div>
       </form>
       <div id="cartNotice" class="cart-notice"></div>
     </section>
   </main>
   <footer>
-    LUCKY Delivery &copy; 2024
+    LUCKY Delivery &copy; 2025
   </footer>
+  <button id="pwaInstallBtn" style="display:none;position:fixed;bottom:2em;right:2em;z-index:9999;background:#FFA726;color:#fff;padding:1em 2em;border:none;border-radius:1em;font-weight:700;box-shadow:0 2px 12px #FFA72655;">ติดตั้งแอป</button>
   <script src="order.js" defer></script>
   <script>
-    // ตรวจสอบว่า order.js ถูกโหลดและ renderProducts ถูกเรียกหรือไม่
-    if (!document.querySelector('.product-list').children.length) {
-      document.querySelector('.product-list').innerHTML = '<div style="color:#d32f2f;text-align:center;padding:2em 0;">ไม่พบสินค้า กรุณารีเฟรชหน้าหรือแจ้งผู้ดูแลระบบ</div>';
-    }
-    // Register service worker
+    // PWA install prompt
+    let deferredPrompt;
+    const pwaBtn = document.getElementById('pwaInstallBtn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      pwaBtn.style.display = 'block';
+    });
+    pwaBtn && pwaBtn.addEventListener('click', async () => {
+      if (deferredPrompt) {
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+          pwaBtn.style.display = 'none';
+        }
+        deferredPrompt = null;
+      }
+    });
+    window.addEventListener('appinstalled', () => {
+      pwaBtn.style.display = 'none';
+    });
+    // Service worker
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js')
         .then(registration => console.log('Service Worker registered with scope:', registration.scope))
         .catch(error => console.error('Service Worker registration failed:', error));
     }
-  </script>
-  <script>
-    getLocationBtn.onclick = function(e) {
-      e.preventDefault();
-      if (!navigator.geolocation) {
-        showToast('เบราว์เซอร์นี้ไม่รองรับการระบุตำแหน่ง');
-        return;
-      }
-      getLocationBtn.textContent = 'กำลังค้นหาตำแหน่ง...';
-      getLocationBtn.disabled = true;
-      navigator.geolocation.getCurrentPosition(pos => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-        mapPreview.innerHTML = `<div style="color:#FFA726;">พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}</div>`;
-        addressInput.value = `พิกัด: ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
-        showToast('คัดลอกพิกัดเรียบร้อย', 1800);
-        getLocationBtn.textContent = '📍 ใช้ตำแหน่งจากแผนที่';
-        getLocationBtn.disabled = false;
-      }, err => {
-        showToast('ไม่สามารถระบุตำแหน่งได้');
-        getLocationBtn.textContent = '📍 ใช้ตำแหน่งจากแผนที่';
-        getLocationBtn.disabled = false;
-      });
-    };
   </script>
 </body>
 </html>

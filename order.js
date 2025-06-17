@@ -9,7 +9,6 @@ try {
   cart = {};
 }
 
-// โหลดสินค้าและ render เมื่อ DOM พร้อม
 function loadProductsAndRender() {
   fetch('products.json')
     .then(res => res.json())
@@ -49,7 +48,6 @@ function renderProducts() {
       </div>
     `;
   }).join('');
-  // รีผูก event หลัง render
   document.querySelectorAll('.product-qty').forEach(input => {
     input.addEventListener('input', function() {
       let val = Math.max(parseInt(this.min)||0, Math.min(99, parseInt(this.value) || 0));
@@ -121,14 +119,22 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('productForm').addEventListener('submit', e => {
     e.preventDefault();
     // Remove zero qty and check min for water
+    let waterFail = false;
     Object.keys(cart).forEach(k => {
       const prod = PRODUCTS.find(p => p.id === k);
       const min = prod && prod.min ? prod.min : 0;
-      if (!cart[k] || cart[k] < min) delete cart[k];
+      if (!cart[k] || cart[k] < min) {
+        if (prod && prod.id && prod.id.startsWith('bottle_') && cart[k] < min) waterFail = true;
+        delete cart[k];
+      }
     });
     // ตรวจสอบว่า cart ว่างหรือไม่
     if (Object.keys(cart).length === 0) {
-      showPopup('กรุณาเลือกสินค้าอย่างน้อย 1 รายการ (น้ำดื่มขั้นต่ำ 10 แพ็ค)');
+      if (waterFail) {
+        showPopup('กรุณาเลือกน้ำดื่มขั้นต่ำ 10 แพ็ค หรือเลือกสินค้าอื่นให้ครบตามขั้นต่ำ');
+      } else {
+        showPopup('กรุณาเลือกสินค้าอย่างน้อย 1 รายการ');
+      }
       return;
     }
     sessionStorage.setItem('orderProducts', JSON.stringify(cart));

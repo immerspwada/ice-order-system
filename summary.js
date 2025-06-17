@@ -122,13 +122,17 @@ function validateOrderProducts(products) {
 
 // เพิ่มฟังก์ชันตรวจสอบคูปองส่วนลด
 function validateCoupon(couponCode, total) {
-  const coupons = JSON.parse(localStorage.getItem('coupons') || '[]');
+  const coupons = config.coupons;
   const coupon = coupons.find(c => c.code === couponCode);
   if (!coupon) {
     throw new Error('คูปองส่วนลดไม่ถูกต้อง');
   }
-  if (total < coupon.minOrder) {
-    throw new Error(`ต้องมียอดสั่งซื้อขั้นต่ำ ${coupon.minOrder} บาท`);
+  if (total < coupon.minPurchase) {
+    throw new Error(`ต้องมียอดสั่งซื้อขั้นต่ำ ${coupon.minPurchase} บาท`);
+  }
+  // Check if coupon is expired
+  if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
+    throw new Error('คูปองส่วนลดหมดอายุแล้ว');
   }
   return coupon;
 }
