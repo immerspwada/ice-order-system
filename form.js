@@ -1,6 +1,4 @@
 // form.js - Step 2: Customer Info Form
-// LIFF LINE Login & Profile (consistent with index.html)
-const liffId = 'U56b89fa4ea4169863a687fe972fa3836';
 const lineProfileBox = document.getElementById('lineProfileBox');
 const customerForm = document.getElementById('customerForm');
 
