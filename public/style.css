@@ -1,0 +1,12 @@
+body {
+  font-family: 'Prompt', Arial, sans-serif;
+  background: #fffbe7;
+  color: #222;
+  margin: 0;
+  padding: 0;
+}
+h1 {
+  color: #FFA726;
+  margin: 2em 0 1em 0;
+  text-align: center;
+}
