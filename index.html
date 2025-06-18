@@ -42,7 +42,7 @@
   <button id="pwaInstallBtn" style="display:none;position:fixed;bottom:2em;right:2em;z-index:9999;background:#FFA726;color:#fff;padding:1em 2em;border:none;border-radius:1em;font-weight:700;box-shadow:0 2px 12px #FFA72655;">ติดตั้งแอป</button>
   <script src="order.js" defer></script>
   <script>
-    // PWA install prompt
+    // PWA install prompt (ควรอยู่ที่นี่เท่านั้น)
     let deferredPrompt;
     const pwaBtn = document.getElementById('pwaInstallBtn');
     window.addEventListener('beforeinstallprompt', (e) => {
@@ -63,7 +63,7 @@
     window.addEventListener('appinstalled', () => {
       pwaBtn.style.display = 'none';
     });
-    // Service worker
+    // Service worker register (ควรอยู่ที่นี่เท่านั้น)
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('service-worker.js')
         .then(registration => console.log('Service Worker registered with scope:', registration.scope))
