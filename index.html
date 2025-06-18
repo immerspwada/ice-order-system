@@ -13,6 +13,26 @@
   <link rel="apple-touch-icon" href="icon-192x192.png">
   <link rel="stylesheet" href="style.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;700&family=Prompt:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    .main-title {
+      font-family: 'Prompt', 'Inter', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: #FFA726;
+      text-align: center;
+      margin: 1.5em 0 0.7em 0;
+      letter-spacing: 1px;
+      text-shadow: 0 2px 12px #ffe0b2, 0 1px 0 #fff;
+    }
+    .main-title .icon {
+      font-size: 1.3em;
+      vertical-align: middle;
+      margin-right: 0.3em;
+    }
+    @media (max-width: 600px) {
+      .main-title { font-size: 1.4rem; }
+    }
+  </style>
 </head>
 <body>
   <header>
@@ -24,7 +44,7 @@
     </nav>
   </header>
   <main class="container">
-    <h1 tabindex="0">เลือกสินค้า</h1>
+    <h1 class="main-title"><span class="icon">🛒</span>เลือกสินค้า</h1>
     <section class="product-catalog">
       <form id="productForm">
         <div class="product-list"></div>
